@@ -1,5 +1,4 @@
 #include "big_integer.h"
-#include <iostream>
 
 using namespace std;
 
@@ -11,9 +10,10 @@ big_int* big_int_get(const char* x) {
 
     size_t l = strlen(x);
     num->sign = false;
+    const char* new_x = x;
     if (x[0] == '-') {
         num->sign = true;
-        x++;
+        new_x++;
         l--;
     }
 
@@ -26,12 +26,13 @@ big_int* big_int_get(const char* x) {
     }
 
     for (size_t i = 0; i < l; i++) {
-        if (x[l - 1 - i] == '1') num->number[i >> 3] |= (1 << (i & 7));
-        else if (x[l - 1 - i] != '0') {  // x[] не 1 и не 0
+        if (new_x[l - 1 - i] == '1') num->number[i >> 3] |= (1 << (i & 7));
+        else if (new_x[l - 1 - i] != '0') {  // x[] не 1 и не 0
             big_int_free(num);
             return NULL;
         }
     }
+    big_int_remove_zeroes(num);
     return num;
 }
 
@@ -71,9 +72,8 @@ big_int* big_int_copy(const big_int* original) {
 
     big_int* copy = (big_int*)malloc(sizeof(big_int));
     if (!copy) return NULL;
-
-    copy->length = original->length;
-    copy->sign = original->sign;
+    
+    *copy = *original;
 
     copy->number = (unsigned char*)malloc(copy->length * sizeof(unsigned char));
     if (!copy->number) {
@@ -148,18 +148,11 @@ big_int* big_int_add(const big_int* n1, const big_int* n2) {
         return result;
     }
     else {
-        big_int* n2_temp = big_int_copy(n2);
-        if (!n2_temp) {
-            big_int_free(n2_temp);
-            return NULL;
-        }
-        n2_temp->sign = !n2_temp->sign;
-        big_int* result = big_int_sub(n1, n2_temp);
-        if (!result) {
-            big_int_free(n2_temp);
-            return NULL;
-        }
-        big_int_free(n2_temp);
+        ((big_int*)n2)->sign = !n2->sign;
+        big_int* result = big_int_sub(n1, n2);
+        ((big_int*)n2)->sign = !n2->sign;
+        if (!result) return NULL;
+
         return result;
     }
 }
@@ -228,11 +221,7 @@ big_int* big_int_shift_right(const big_int* num) {
         new_num->number[i] = (current >> 1) | (borrow << 7);
         borrow = current & 1;
     }
-
-    if (new_num->length > 1 && new_num->number[new_num->length - 1] == 0) {
-        big_int_remove_zeroes(new_num);
-    }
-
+    big_int_remove_zeroes(new_num);
     return new_num;
 }
 
@@ -313,26 +302,51 @@ bool big_int_eq(const big_int* n1, const big_int* n2) {
 
 big_int* big_int_mul(const big_int* n1, const big_int* n2)
 {
-    
+    if (!n1 || !n2) return big_int_get("0");
+
+    size_t new_length = n1->length + n2->length;
+    big_int* result = (big_int*)malloc(sizeof(big_int));
+    if (!result) return NULL;
+    result->length = new_length;
+
+    result->number = (unsigned char*)calloc(result->length, sizeof(unsigned char));
+    if (!result->number) {
+        free(result);
+        return big_int_get("0");;
+    }
+
+    result->sign = n1->sign ^ n2->sign;
+
+    for (size_t i = 0; i < n1->length; i++) {
+        for (size_t j = 0; j < n2->length; j++) {
+            unsigned short mult = n1->number[i] * n2->number[j];
+            unsigned short carry = (result->number[i + j] + mult) >> 8;
+            result->number[i + j] += mult;
+            result->number[i + j + 1] += carry;
+        }
+    }
+    big_int_remove_zeroes(result);
+    return result;
 }
 
 big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
-    if (!x || !y) return NULL;
-
-    big_int* zero = big_int_get("0");
-    if (!zero) return NULL;
+    if (!x || !y) return big_int_get("0");
 
     big_int* a = big_int_abs(x);
-    if (!a) {
-        big_int_free(zero);
-        return NULL;
-    }
     big_int* b = big_int_abs(y);
-    if (!b) {
-        big_int_free(zero);
+    if (!a || !b) {
         big_int_free(a);
-        return NULL;
+        big_int_free(b);
+        return big_int_get("0");
     }
+
+    big_int* zero = big_int_get("0");
+    if (!zero) {
+        big_int_free(a);
+        big_int_free(b);
+        return big_int_get("0");
+    }
+
 
     if (big_int_eq(a, zero)) {
         big_int_free(zero);
@@ -348,21 +362,14 @@ big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
     int power = 0;
     while (!(b->number[0] & 1) && !(a->number[0] & 1)) {
         big_int* tmp_a = big_int_shift_right(a);
-        if (!tmp_a) {
-            big_int_free(zero);
-            big_int_free(a);
-            big_int_free(b);
-            return NULL;
-        }
         big_int* tmp_b = big_int_shift_right(b);
-        if (!tmp_b) {
-            big_int_free(zero);
+        if (!tmp_a || !tmp_b) {
             big_int_free(a);
             big_int_free(b);
             big_int_free(tmp_a);
-            return NULL;
+            big_int_free(tmp_b);
+            return zero;
         }
-
         big_int_free(a);
         big_int_free(b);
         a = tmp_a;
@@ -377,8 +384,7 @@ big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
             if (!tmp_b) {
                 big_int_free(a);
                 big_int_free(b);
-                big_int_free(zero);
-                return NULL;
+                return zero;
             }
             big_int_free(b);
             b = tmp_b;
@@ -388,8 +394,7 @@ big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
             if (!tmp_a) {
                 big_int_free(a);
                 big_int_free(b);
-                big_int_free(zero);
-                return NULL;
+                return zero;
             }
             big_int_free(a);
             a = tmp_a;
@@ -399,25 +404,26 @@ big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
         }
         big_int* tmp = big_int_sub(a, b);
         if (!tmp) {
-            big_int_free(zero);
             big_int_free(a);
             big_int_free(b);
-            return NULL;
+            return zero;
         }
-        free(a);
+        big_int_free(a);
         a = tmp;
     }
     for (size_t i = 0; i < power; i++) {
         big_int* tmp = big_int_shift_left(b);
         if (!tmp) {
-            big_int_free(zero);
             big_int_free(a);
             big_int_free(b);
-            return NULL;
+            return zero;
         }
         big_int_free(b);
         b = tmp;
     }
+    big_int_free(zero);
+    big_int_free(a);
+
     return b;
 }
 

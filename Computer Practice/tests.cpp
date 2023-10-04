@@ -1,10 +1,5 @@
 #include "tests.h"
-#include <iostream>
-#include "Algorithms.h"
-#include "big_integer.h"
-#include <fstream>
-#include <vector>
-#include <string>
+
 using namespace std;
 
 void test_euclid() {
@@ -135,6 +130,22 @@ void test_big_int_functions() {
     cout << "Number 2: ";
     big_int_print(num2);
 
+    big_int* abs1 = big_int_abs(num1);
+    cout << "Absolute value of Number 1: ";
+    big_int_print(abs1);
+
+    big_int* abs2 = big_int_abs(num2);
+    cout << "Absolute value of Number 2: ";
+    big_int_print(abs2);
+
+    big_int* copy1 = big_int_copy(num1);
+    bool eq1 = big_int_eq(num1, copy1);
+    cout << "Check for equality of Number 1 and its copy: " << (eq1 ? "Equal" : "Not equal") << endl;
+
+    big_int* copy2 = big_int_copy(num2);
+    bool eq2 = big_int_eq(num2, copy2);
+    cout << "Check for equality of Number 2 and its copy: " << (eq2 ? "Equal" : "Not equal") << endl;
+
     big_int* sum = big_int_add(num1, num2);
     cout << "Sum: ";
     big_int_print(sum);
@@ -143,23 +154,49 @@ void test_big_int_functions() {
     cout << "Difference: ";
     big_int_print(difference);
 
+    big_int* product = big_int_mul(num1, num2);
+    cout << "Product: ";
+    big_int_print(product);
+
+    big_int* gcd = big_int_euclid_binary(num1, num2);
+    cout << "GCD: ";
+    big_int_print(gcd);
+
+    big_int* shifted_left_num1 = big_int_shift_left(num1);
+    cout << "Shift left for Number 1: ";
+    big_int_print(shifted_left_num1);
+
+    big_int* shifted_left_num2 = big_int_shift_left(num2);
+    cout << "Shift left for Number 2: ";
+    big_int_print(shifted_left_num2);
+
+    big_int* shifted_right_num1 = big_int_shift_right(num1);
+    cout << "Shift right for Number 1: ";
+    big_int_print(shifted_right_num1);
+
+    big_int* shifted_right_num2 = big_int_shift_right(num2);
+    cout << "Shift right for Number 2: ";
+    big_int_print(shifted_right_num2);
+
     bool geq = big_int_geq(num1, num2);
     cout << "Is big integer 1 greater than or equal to big integer 2? : " << (geq ? "Yes" : "No") << endl;
     bool geq_mod = big_int_abs_geq(num1, num2);
-    cout << "Is big integer abs 1 greater than or equal to big integer 2? : " << (geq_mod ? "Yes" : "No") << endl;
-
-    cout << "Shift left for Number 1: ";
-    big_int_shift_left(num1);
-    big_int_print(num1);
-
-    cout << "Shift right for Number 2: ";
-    big_int_shift_right(num2);
-    big_int_print(num2);
+    cout << "Is absolute big integer 1 greater than or equal to absolute big integer 2? : " << (geq_mod ? "Yes" : "No") << endl;
 
     big_int_free(num1);
     big_int_free(num2);
+    big_int_free(abs1);
+    big_int_free(abs2);
+    big_int_free(copy1);
+    big_int_free(copy2);
     big_int_free(sum);
     big_int_free(difference);
+    big_int_free(product);
+    big_int_free(gcd);
+    big_int_free(shifted_left_num1);
+    big_int_free(shifted_left_num2);
+    big_int_free(shifted_right_num1);
+    big_int_free(shifted_right_num2);
 
     cout << "All tests completed." << endl;
 }

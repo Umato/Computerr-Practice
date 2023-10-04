@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef BIG_INTEGER_H
+#define BIG_INTEGER_H
+
+#include <iostream>
+
 typedef struct big_int {
 	size_t length;
 	unsigned char* number;
@@ -46,5 +51,5 @@ big_int* big_int_pow(const big_int* base, int exponent);
 big_int* big_int_from_decimal(const char* str);
 
 
-
+#endif // BIG_INT_H
 

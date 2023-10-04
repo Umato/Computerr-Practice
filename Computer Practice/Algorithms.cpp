@@ -1,5 +1,5 @@
 #include "Algorithms.h"
-#include <iostream>
+
 
 using namespace std;
 
@@ -62,12 +62,11 @@ long long mod_pow_recursive(long long x, long long y, long long m) {
     }
 }
 
-// Õ≈ –¿¡Œ“¿≈“
 long long lr_mod_pow(long long x, long long y, long long m) {
     int pow = 1;
     while (pow < y) pow <<= 1;
-    long long result = 1;
-    for (pow >>= 1; (pow & 1) == 0; pow >>= 1) {
+    long long result = x % m;
+    for (pow >>= 2; pow; pow >>= 1) {
         result = (result * result) % m;
         if (pow & y)
             result = (result * x) % m;

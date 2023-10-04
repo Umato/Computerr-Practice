@@ -1,5 +1,15 @@
 #pragma once
 
+#ifndef TESTS_H
+#define TESTS_H
+
+#include <iostream>
+#include "Algorithms.h"
+#include "big_integer.h"
+#include <fstream>
+#include <vector>
+#include <string>
+
 void test_euclid();
 void test_mod_pow();
 void test_euclid_extended();
@@ -11,3 +21,5 @@ void subtraction_check();
 void test_big_int_euclid_binary();
 void test_big_int_shift_right();
 void test_big_int_shift_left();
+
+#endif // TESTS_H
