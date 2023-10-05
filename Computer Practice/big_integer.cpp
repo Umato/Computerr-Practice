@@ -249,11 +249,12 @@ big_int* big_int_shift_left(const big_int* num, int n) {
     if (!new_num) return NULL;
 
     new_num->length += bytes_shift;
-    new_num->number = (unsigned char*)realloc(new_num->number, new_num->length * sizeof(unsigned char));))
-    if (!new_num->number) {
+    unsigned char* temp = (unsigned char*)realloc(new_num->number, new_num->length * sizeof(unsigned char));
+    if (!temp) {
         big_int_free(new_num);
-        return big_int_get("0");
+        return NULL;
     }
+    memmove(new_num->number + bytes_shift, new_num->number, new_num->length - bytes_shift);
 
 }
 
