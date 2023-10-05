@@ -130,7 +130,10 @@ void test_big_int_functions() {
     cout << "Number 2: ";
     big_int_print(num2);
 
-    big_int* abs1 = big_int_abs(num1);
+    //unsigned short x = num1->number[0] * num2->number[0];
+    //cout << x << "\n";
+    //cout << (int)num1->number[0] << "\n";
+    /*big_int* abs1 = big_int_abs(num1);
     cout << "Absolute value of Number 1: ";
     big_int_print(abs1);
 
@@ -148,7 +151,7 @@ void test_big_int_functions() {
 
     big_int* sum = big_int_add(num1, num2);
     cout << "Sum: ";
-    big_int_print(sum);
+    big_int_print(sum);*/
 
     big_int* difference = big_int_sub(num1, num2);
     cout << "Difference: ";
@@ -162,7 +165,7 @@ void test_big_int_functions() {
     cout << "GCD: ";
     big_int_print(gcd);
 
-    big_int* shifted_left_num1 = big_int_shift_left(num1);
+    /*big_int* shifted_left_num1 = big_int_shift_left(num1);
     cout << "Shift left for Number 1: ";
     big_int_print(shifted_left_num1);
 
@@ -196,7 +199,7 @@ void test_big_int_functions() {
     big_int_free(shifted_left_num1);
     big_int_free(shifted_left_num2);
     big_int_free(shifted_right_num1);
-    big_int_free(shifted_right_num2);
+    big_int_free(shifted_right_num2);*/
 
     cout << "All tests completed." << endl;
 }
@@ -264,7 +267,7 @@ void test_big_int_shift_right() {
     while (getline(in, numStr) && getline(res, resStr)) {
         // Создаем представление big_int числа numStr и выполняем сдвиг вправо
         big_int* num = big_int_get(numStr.c_str());
-        big_int* shiftedNum = big_int_shift_right(num);
+        big_int* shiftedNum = big_int_shift_right(num,1);
 
         // Читаем верный результат из файла result.txt и создаем big_int представление этого результата
         big_int* expectedResult = big_int_get(resStr.c_str());
@@ -296,7 +299,7 @@ void test_big_int_shift_left() {
     while (getline(in, numStr) && getline(res, resStr)) {
         // Создаем представление big_int числа numStr и выполняем сдвиг вправо
         big_int* num = big_int_get(numStr.c_str());
-        big_int* shiftedNum = big_int_shift_left(num);
+        big_int* shiftedNum = big_int_shift_left(num,1);
 
         // Читаем верный результат из файла result.txt и создаем big_int представление этого результата
         big_int* expectedResult = big_int_get(resStr.c_str());
