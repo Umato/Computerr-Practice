@@ -240,22 +240,36 @@ big_int* big_int_shift_right(const big_int* num, int n) {
 }
 
 big_int* big_int_shift_left(const big_int* num, int n) {
-    if (!num || n <= 0) return NULL;
-    
+    if (!num || n <= 0) return big_int_get("0");
+
     int bytes_shift = n / 8;
     int bits_shift = n % 8;
+
+    size_t new_length = num->length + bytes_shift + (bits_shift ? 1 : 0);
 
     big_int* new_num = big_int_copy(num);
     if (!new_num) return NULL;
 
-    new_num->length += bytes_shift;
-    unsigned char* temp = (unsigned char*)realloc(new_num->number, new_num->length * sizeof(unsigned char));
-    if (!temp) {
+    new_num->number = (unsigned char*)realloc(new_num->number, new_length * sizeof(unsigned char));
+    if (!new_num->number) {
         big_int_free(new_num);
         return NULL;
     }
-    memmove(new_num->number + bytes_shift, new_num->number, new_num->length - bytes_shift);
+    memset(new_num->number + new_length - 1, 0, (bits_shift ? 1 : 0));
+    if (bytes_shift > 0) {
+        memmove(new_num->number + bytes_shift, new_num->number, num->length);
+        memset(new_num->number, 0, bytes_shift);
+    }
 
+    if (bits_shift > 0) {
+        for (size_t i = new_length - 1; n > bytes_shift; i--) {
+            new_num->number[i] = (new_num->number[i] << bits_shift) | (new_num->number[i - 1] >> (8 - bits_shift));
+        }
+    }
+    new_num->length = new_length;
+    big_int_remove_zeroes(new_num);
+    return new_num;
+    
 }
 
 void big_int_remove_zeroes(big_int* num) {
