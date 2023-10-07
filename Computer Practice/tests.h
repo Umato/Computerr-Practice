@@ -21,5 +21,7 @@ void subtraction_check();
 void test_big_int_euclid_binary();
 void test_big_int_shift_right();
 void test_big_int_shift_left();
+void test_big_int_multiplication();
+void test_big_int_euclid_binary_from_file();
 
 #endif // TESTS_H

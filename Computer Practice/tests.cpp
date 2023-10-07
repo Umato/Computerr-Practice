@@ -130,10 +130,7 @@ void test_big_int_functions() {
     cout << "Number 2: ";
     big_int_print(num2);
 
-    //unsigned short x = num1->number[0] * num2->number[0];
-    //cout << x << "\n";
-    //cout << (int)num1->number[0] << "\n";
-    /*big_int* abs1 = big_int_abs(num1);
+    big_int* abs1 = big_int_abs(num1);
     cout << "Absolute value of Number 1: ";
     big_int_print(abs1);
 
@@ -151,7 +148,7 @@ void test_big_int_functions() {
 
     big_int* sum = big_int_add(num1, num2);
     cout << "Sum: ";
-    big_int_print(sum);*/
+    big_int_print(sum);
 
     big_int* difference = big_int_sub(num1, num2);
     cout << "Difference: ";
@@ -164,22 +161,6 @@ void test_big_int_functions() {
     big_int* gcd = big_int_euclid_binary(num1, num2);
     cout << "GCD: ";
     big_int_print(gcd);
-
-    /*big_int* shifted_left_num1 = big_int_shift_left(num1);
-    cout << "Shift left for Number 1: ";
-    big_int_print(shifted_left_num1);
-
-    big_int* shifted_left_num2 = big_int_shift_left(num2);
-    cout << "Shift left for Number 2: ";
-    big_int_print(shifted_left_num2);
-
-    big_int* shifted_right_num1 = big_int_shift_right(num1);
-    cout << "Shift right for Number 1: ";
-    big_int_print(shifted_right_num1);
-
-    big_int* shifted_right_num2 = big_int_shift_right(num2);
-    cout << "Shift right for Number 2: ";
-    big_int_print(shifted_right_num2);
 
     bool geq = big_int_geq(num1, num2);
     cout << "Is big integer 1 greater than or equal to big integer 2? : " << (geq ? "Yes" : "No") << endl;
@@ -196,10 +177,6 @@ void test_big_int_functions() {
     big_int_free(difference);
     big_int_free(product);
     big_int_free(gcd);
-    big_int_free(shifted_left_num1);
-    big_int_free(shifted_left_num2);
-    big_int_free(shifted_right_num1);
-    big_int_free(shifted_right_num2);*/
 
     cout << "All tests completed." << endl;
 }
@@ -256,62 +233,137 @@ void subtraction_check() {
     res.close();
 }
 
-void test_big_int_shift_right() {
-    // Открываем файлы input.txt и result.txt для чтения
-    std::ifstream in("input.txt");
-    std::ifstream res("result.txt");
+void test_big_int_shift_left() {
+    ifstream infile("input.txt");
+    string str_number, str_expected;
+    int n;
 
-    std::string numStr, resStr;
-
-    // Проходим по каждой строке в файлах input.txt и result.txt
-    while (getline(in, numStr) && getline(res, resStr)) {
-        // Создаем представление big_int числа numStr и выполняем сдвиг вправо
-        big_int* num = big_int_get(numStr.c_str());
-        big_int* shiftedNum = big_int_shift_right(num,1);
-
-        // Читаем верный результат из файла result.txt и создаем big_int представление этого результата
-        big_int* expectedResult = big_int_get(resStr.c_str());
-
-        big_int_print(shiftedNum);
-        cout << " = ";
-        big_int_print(expectedResult);
-        cout << '\n';
-
-        // Очищаем использованную память
-        big_int_free(num);
-        big_int_free(shiftedNum);
-        big_int_free(expectedResult);
+    if (!infile) {
+        cout << "Cannot open input file.\n";
+        return;
     }
+    int k = 0;
+    while (infile >> str_number >> n >> str_expected) {
+        big_int* original = big_int_get(str_number.c_str());
+        big_int* shifted = big_int_shift_left(original, n);
+        big_int* expected = big_int_get(str_expected.c_str());
 
-    // Закрываем файлы
-    in.close();
-    res.close();
+        bool r = big_int_eq(shifted, expected);
+        k += r;
+        if (!r) {
+            cout << str_number.c_str() << "\n";
+            cout << n << "\n";
+        }
+
+        big_int_free(original);
+        big_int_free(shifted);
+        big_int_free(expected);
+    }
+    cout << k << "\n";
+    infile.close();
+   
 }
 
-void test_big_int_shift_left() {
-    // Открываем файлы input.txt и result.txt для чтения
-    std::ifstream in("input.txt");
-    std::ifstream res("result.txt");
+void test_big_int_shift_right() {
+    ifstream infile("input.txt");
+    string str_number, str_expected;
+    int n;
 
-    std::string numStr, resStr;
+    if (!infile) {
+        cout << "Cannot open input file.\n";
+        return;
+    }
+    int k = 0;
+    while (infile >> str_number >> n >> str_expected) {
+        big_int* original = big_int_get(str_number.c_str());
+        big_int* shifted = big_int_shift_right(original, n);
+        big_int* expected = big_int_get(str_expected.c_str());
 
-    // Проходим по каждой строке в файлах input.txt и result.txt
-    while (getline(in, numStr) && getline(res, resStr)) {
-        // Создаем представление big_int числа numStr и выполняем сдвиг вправо
-        big_int* num = big_int_get(numStr.c_str());
-        big_int* shiftedNum = big_int_shift_left(num,1);
+        bool r = big_int_eq(shifted, expected);
+        k += r;
+        if (!r) {
+            cout << str_number.c_str() << "\n";
+            cout << n << "\n";
+        }
 
-        // Читаем верный результат из файла result.txt и создаем big_int представление этого результата
-        big_int* expectedResult = big_int_get(resStr.c_str());
+        big_int_free(original);
+        big_int_free(shifted);
+        big_int_free(expected);
+    }
+    cout << k << "\n";
+    infile.close();
+}
 
-        cout << big_int_eq(shiftedNum, expectedResult) << '\n';
-        // Очищаем использованную память
-        big_int_free(num);
-        big_int_free(shiftedNum);
-        big_int_free(expectedResult);
+void test_big_int_multiplication() {
+    ifstream infile("input.txt");
+    ifstream resultfile("result.txt");
+
+    string str_number1, str_number2, str_expected_product;
+
+    if (!infile || !resultfile) {
+        cout << "Cannot open input or result file.\n";
+        return;
     }
 
-    // Закрываем файлы
-    in.close();
-    res.close();
+    while ((infile >> str_number1 >> str_number2) && (resultfile >> str_expected_product)) {
+        big_int* number1 = big_int_get(str_number1.c_str());
+        big_int* number2 = big_int_get(str_number2.c_str());
+        big_int* expected_product = big_int_get(str_expected_product.c_str());
+
+        big_int* product = big_int_mul(number1, number2);
+
+        if (big_int_eq(product, expected_product)) {
+            cout << "Test passed.\n";
+        }
+        else {
+            cout << "Test failed.\n";
+        }
+
+        big_int_free(number1);
+        big_int_free(number2);
+        big_int_free(expected_product);
+        big_int_free(product);
+    }
+
+    infile.close();
+    resultfile.close();
+}
+
+void test_big_int_euclid_binary_from_file() {
+    ifstream infile("input.txt");
+    ifstream resultfile("result.txt");
+
+    string str_number1, str_number2, str_expected_gcd;
+
+    if (!infile || !resultfile) {
+        cout << "Cannot open input or result file.\n";
+        return;
+    }
+
+    while ((infile >> str_number1 >> str_number2) && (resultfile >> str_expected_gcd)) {
+        big_int* number1 = big_int_get(str_number1.c_str());
+        big_int* number2 = big_int_get(str_number2.c_str());
+        big_int* expected_gcd = big_int_get(str_expected_gcd.c_str());
+
+        big_int* gcd = big_int_euclid_binary(number1, number2);
+
+        if (big_int_eq(gcd, expected_gcd)) {
+            cout << "Test passed.\n";
+        }
+        else {
+            cout << "Test failed. Expected ";
+            big_int_print(expected_gcd);
+            cout << ", but got ";
+            big_int_print(gcd);
+            cout << '\n';
+        }
+
+        big_int_free(number1);
+        big_int_free(number2);
+        big_int_free(expected_gcd);
+        big_int_free(gcd);
+    }
+
+    infile.close();
+    resultfile.close();
 }

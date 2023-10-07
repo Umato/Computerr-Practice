@@ -28,6 +28,7 @@ big_int* big_int_get(const char* x) {
     for (size_t i = 0; i < l; i++) {
         if (new_x[l - 1 - i] == '1') num->number[i >> 3] |= (1 << (i & 7));
         else if (new_x[l - 1 - i] != '0') {  // x[] не 1 и не 0
+            cout << new_x[l - 1 - i];
             big_int_free(num);
             return NULL;
         }
@@ -39,7 +40,7 @@ big_int* big_int_get(const char* x) {
 void big_int_print(const big_int* num) {
     if (!num) return;
 
-    const int total_bits = num->length << 3;
+    const size_t total_bits = num->length << 3;
     char bit;
 
     if (num->sign) putchar('-');
@@ -208,7 +209,7 @@ big_int* big_int_sub(const big_int* n1, const big_int* n2) {
 }
 
 big_int* big_int_shift_right(const big_int* num, int n) {
-    if (!num || n <= 0) return NULL;
+    if (!num || n < 0) return NULL;
     
     int bytes_shift = n / 8;
     int bits_shift = n % 8;
@@ -240,7 +241,7 @@ big_int* big_int_shift_right(const big_int* num, int n) {
 }
 
 big_int* big_int_shift_left(const big_int* num, int n) {
-    if (!num || n <= 0) return big_int_get("0");
+    if (!num || n < 0) return big_int_get("0");
 
     int bytes_shift = n / 8;
     int bits_shift = n % 8;
@@ -250,23 +251,29 @@ big_int* big_int_shift_left(const big_int* num, int n) {
     big_int* new_num = big_int_copy(num);
     if (!new_num) return NULL;
 
-    new_num->number = (unsigned char*)realloc(new_num->number, new_length * sizeof(unsigned char));
-    if (!new_num->number) {
+    unsigned char* temp = (unsigned char*)realloc(new_num->number, new_length * sizeof(unsigned char));
+    if (!temp) {
         big_int_free(new_num);
-        return NULL;
+        return big_int_get("0");
     }
-    memset(new_num->number + new_length - 1, 0, (bits_shift ? 1 : 0));
+    new_num->number = temp;
+
+    if (bits_shift > 0) {
+        memset(new_num->number + num->length + bytes_shift, 0, sizeof(unsigned char));
+    }   
     if (bytes_shift > 0) {
         memmove(new_num->number + bytes_shift, new_num->number, num->length);
         memset(new_num->number, 0, bytes_shift);
     }
 
     if (bits_shift > 0) {
-        for (size_t i = new_length - 1; n > bytes_shift; i--) {
+        for (size_t i = new_length - 1; i > bytes_shift; i--) {
             new_num->number[i] = (new_num->number[i] << bits_shift) | (new_num->number[i - 1] >> (8 - bits_shift));
         }
+        new_num->number[bytes_shift] <<= bits_shift;
     }
     new_num->length = new_length;
+
     big_int_remove_zeroes(new_num);
     return new_num;
     
@@ -455,15 +462,4 @@ void big_int_div(const big_int* n1, const big_int* n2, big_int* quotient, big_in
 
 }   
 
-
-
-//big_int* big_int_from_decimal(const char* str) {
-//    if (!str) return NULL;
-//
-//    big_int* num = big_int_get("0");
-//    if (!num) return NULL;
-//
-//    size_t l = strlen(str);
-//
-//}
 
