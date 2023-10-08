@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+typedef long long ll;
+
 void test_euclid();
 void test_mod_pow();
 void test_euclid_extended();
@@ -23,5 +25,7 @@ void test_big_int_shift_right();
 void test_big_int_shift_left();
 void test_big_int_multiplication();
 void test_big_int_euclid_binary_from_file();
+void test_big_int_div();
+void test_big_int_mod_pow();
 
 #endif // TESTS_H

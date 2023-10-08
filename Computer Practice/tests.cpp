@@ -3,16 +3,16 @@
 using namespace std;
 
 void test_euclid() {
-	int a, b;
+	ll a, b;
 	cin >> a >> b;
 
-    int resultEuclid = euclid(a, b);
+    ll resultEuclid = euclid(a, b);
     cout << "Наибольший общий делитель " << a << " и " << b << " с помощью обычного алгоритма Евклида равен " << resultEuclid << "\n";
 
-    int resultEuclidRec = euclid_recursive(a, b);
+    ll resultEuclidRec = euclid_recursive(a, b);
     cout << "Наибольший общий делитель " << a << " и " << b << " с помощью рекурсивного алгоритма Евклида равен " << resultEuclidRec << "\n";
 
-    int resultEuclidBinary = euclid_binary(a, b);
+    ll resultEuclidBinary = euclid_binary(a, b);
     cout << "Наибольший общий делитель " << a << " и " << b << " с помощью бинарного алгоритма Евклида равен " << resultEuclidBinary << "\n";
 }
 
@@ -31,35 +31,35 @@ void test_mod_pow() {
 }
 
 void test_euclid_extended() {
-    int a, b;
+    ll a, b;
     cin >> a >> b;
 
-    int x, y;
+    ll x, y;
 
-    int gcdEuclidExtended = euclid_extended_recursive(a, b, x, y);
+    ll gcdEuclidExtended = euclid_extended_recursive(a, b, x, y);
     cout << "Наибольший общий делитель " << a << " и " << b << " с помощью расширенного алгоритма Евклида равен " << gcdEuclidExtended;
     cout << ", коэффициенты Безу: x = " << x << ", y = " << y << "\n";
 
-    int gcdEuclidExtendedd = euclid_extended_iterative(a, b, x, y);
+    ll gcdEuclidExtendedd = euclid_extended_iterative(a, b, x, y);
     cout << "Наибольший общий делитель " << a << " и " << b << " с помощью модифицированного расширенного алгоритма Евклида равен " << gcdEuclidExtendedd;
     cout << ", коэффициенты Безу: x = " << x << ", y = " << y << "\n";
 }
 
 void test_linear_diophantine() {
-    int n;
+    ll n;
     cin >> n;
 
-    int* coefficients = new int[n];
-    int* result = new int[n];
+    ll* coefficients = new ll[n];
+    ll* result = new ll[n];
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         cin >> coefficients[i];
     }
 
-    int target;
+    ll target;
     cin >> target;
 
-    int success = linear_diophantine(coefficients, n, result, target);
+    ll success = linear_diophantine(coefficients, n, result, target);
     if (success) {
         for (int j = 0; j < n; j++) {
             cout << "x" << j + 1 << " = " << result[j] << "\n";
@@ -74,10 +74,10 @@ void test_linear_diophantine() {
 }
 
 void test_mul_inverse() {
-    int num, mod_val;
+    ll num, mod_val;
     cin >> num >> mod_val;
 
-    int result = mul_inverse(num, mod_val);
+    ll result = mul_inverse(num, mod_val);
 
     if (result == 0) {
         cout << num << " ---- " << mod_val << "\n";
@@ -88,11 +88,11 @@ void test_mul_inverse() {
 }
 
 void test_chinese_reminder() {
-    int num_equations;
+    ll num_equations;
     cin >> num_equations;
 
-    int* remainders = (int*)malloc(num_equations * sizeof(int));
-    int* modules = (int*)malloc(num_equations * sizeof(int));
+    ll* remainders = (ll*)malloc(num_equations * sizeof(ll));
+    ll* modules = (ll*)malloc(num_equations * sizeof(ll));
 
     for (int i = 0; i < num_equations; i++) {
         cin >> remainders[i];
@@ -101,10 +101,10 @@ void test_chinese_reminder() {
         cin >> modules[i];
     }
 
-    int resultChineseReminderr = chinese_reminderr(remainders, modules, num_equations);
-    cout << "Решение системы сравнений с помощью функции chinese_reminderr: " << resultChineseReminderr << "\n";
+    ll resultChineseReminderr = chinese_remainder_iterative(remainders, modules, num_equations);
+    cout << "Решение системы сравнений с помощью функции chinese_remainder_iterative: " << resultChineseReminderr << "\n";
 
-    int resultChineseReminder = chinese_reminder(remainders, modules, num_equations);
+    ll resultChineseReminder = chinese_reminder(remainders, modules, num_equations);
     if (resultChineseReminder == -1) {
         cout << "Система сравнений имеет неприводимые модули.\n";
     }
@@ -157,6 +157,15 @@ void test_big_int_functions() {
     big_int* product = big_int_mul(num1, num2);
     cout << "Product: ";
     big_int_print(product);
+
+    big_int* quotient;
+    big_int* remainder;
+    big_int_div(num1, num2, &quotient, &remainder);
+    cout << "Divide num1 by num2: " << endl;
+    cout << "Quotient: ";
+    big_int_print(quotient);
+    cout << "Remainder: ";
+    big_int_print(remainder);
 
     big_int* gcd = big_int_euclid_binary(num1, num2);
     cout << "GCD: ";
@@ -366,4 +375,77 @@ void test_big_int_euclid_binary_from_file() {
 
     infile.close();
     resultfile.close();
+}
+
+void test_big_int_div(){
+    ifstream infile("input.txt");
+    string str_number1, str_number2, str_expected_quotient, str_expected_remainder;
+
+    if (!infile) {
+        cout << "Cannot open input file.\n";
+        return;
+    }
+
+    while (infile >> str_number1 >> str_number2 >> str_expected_quotient >> str_expected_remainder) {
+        big_int* number1 = big_int_get(str_number1.c_str());
+        big_int* number2 = big_int_get(str_number2.c_str());
+        big_int* expected_quotient = big_int_get(str_expected_quotient.c_str());
+        big_int* expected_remainder = big_int_get(str_expected_remainder.c_str());
+
+        big_int* actual_quotient;
+        big_int* actual_remainder;
+        big_int_div(number1, number2, &actual_quotient, &actual_remainder);
+
+        if (!big_int_eq(actual_quotient, expected_quotient) || !big_int_eq(actual_remainder, expected_remainder)) {
+            cout << "Test failed." << endl;
+            cout << "Input:\n";
+            big_int_print(number1);
+            cout << " and ";
+            big_int_print(number2);
+            cout << "\nExpected quotient: ";
+            big_int_print(expected_quotient);
+            cout << "; Actual quotient: ";
+            big_int_print(actual_quotient);
+            cout << "\nExpected remainder: ";
+            big_int_print(expected_remainder);
+            cout << "; Actual remainder: ";
+            big_int_print(actual_remainder);
+            cout << "\n---------------\n";
+        }
+
+        big_int_free(number1);
+        big_int_free(number2);
+        big_int_free(expected_quotient);
+        big_int_free(expected_remainder);
+        big_int_free(actual_quotient);
+        big_int_free(actual_remainder);
+    }
+
+    infile.close();
+    cout << "All tests completed." << endl;
+}
+
+void test_big_int_mod_pow() {
+    char str1[1024];
+    char str2[1024];
+    char str3[1024];
+    cin >> str1 >> str2 >> str3;
+
+    big_int* base = big_int_get(str1);
+    big_int* exponent = big_int_get(str2);
+    big_int* mod = big_int_get(str3);
+
+    big_int* expected_result = big_int_mod_pow(base, exponent, mod);
+
+    cout << "Modular exponentiation of (" << str1 << " ^ " << str2 << ") mod " << str3 << "\n";
+    cout << "calculated as: ";
+    big_int_print(expected_result);
+    cout << "\n";
+
+    big_int_free(base);
+    big_int_free(exponent);
+    big_int_free(mod);
+    big_int_free(expected_result);
+
+    cout << "All tests completed." << endl;
 }

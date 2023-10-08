@@ -458,8 +458,140 @@ big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
     return b;
 }
 
-void big_int_div(const big_int* n1, const big_int* n2, big_int* quotient, big_int* remainder){
+void big_int_div(const big_int* n1, const big_int* n2, big_int** quotient, big_int** remainder) {
+    if (!n1 || !n2 || big_int_eq(n2, big_int_get("0"))) {
+        *quotient = big_int_get("0");
+        *remainder = big_int_get("0");
+        return;
+    }
 
-}   
+    big_int* r = big_int_abs(n1);
+    big_int* q = big_int_get("0");
+    q->sign = false;
+    if (!r || !q) {
+        big_int_free(r);
+        big_int_free(q);
+        return;
+    }
 
+    big_int* b = big_int_abs(n2);
+    if (!b) {
+        big_int_free(r);
+        big_int_free(q);
+        return;
+    }
 
+    big_int* one = big_int_get("1");
+    if (!one) {
+        big_int_free(r);
+        big_int_free(q);
+        big_int_free(b);
+        return;
+    }
+
+    big_int* tmp_r = nullptr;
+    big_int* tmp_q = nullptr;
+
+    while (big_int_geq(r, b)) {
+        tmp_r = big_int_sub(r, b);
+        if (!tmp_r) {
+            big_int_free(r);
+            big_int_free(q);
+            big_int_free(b);
+            return;
+        }
+        big_int_free(r);
+        r = tmp_r;
+
+        tmp_q = big_int_add(q, one);
+        if (!tmp_q) {
+            big_int_free(r);
+            big_int_free(q);
+            big_int_free(b);
+            return;
+        }
+        big_int_free(q);
+        q = tmp_q;
+    }
+
+    if (n1->sign && !big_int_eq(r, big_int_get("0"))) {
+        tmp_r = big_int_sub(r, b);
+        if (!tmp_r) {
+            big_int_free(r);
+            big_int_free(q);
+            big_int_free(b);
+            return;
+        }
+        big_int_free(r);
+        r = tmp_r;
+
+        tmp_q = big_int_add(q, one);
+        if (!tmp_q) {
+            big_int_free(r);
+            big_int_free(q);
+            big_int_free(b);
+            return;
+        }
+        big_int_free(q);
+        q = tmp_q;
+    }
+
+    big_int_free(b);
+    big_int_free(one);
+    q->sign = !big_int_eq(q, big_int_get("0")) ? n1->sign ^ n2->sign : false;
+    r->sign = false;
+    *quotient = q;
+    *remainder = r;
+    return;
+}
+
+big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod) {
+    if (!base || !exponent || !mod) return NULL;
+
+    big_int* result = big_int_get("1");
+    if (!result) return NULL;
+
+    big_int* base_copy = big_int_copy(base);
+    if (!base_copy) {
+        big_int_free(result);
+        return NULL;
+    }
+
+    big_int* exp_copy = big_int_copy(exponent);
+    if (!exp_copy) {
+        big_int_free(result);
+        big_int_free(base_copy);
+        return NULL;
+    }
+
+    while (!big_int_eq(exp_copy, big_int_get("0"))) {
+        big_int* tmp;
+        big_int* quot = nullptr;
+
+        if (exp_copy->number[0] & 1) {
+            tmp = big_int_mul(result, base_copy);
+            big_int* tmpmod = nullptr;
+            big_int_div(tmp, mod, &quot, &tmpmod);
+            big_int_free(result);
+            result = tmpmod;
+            big_int_free(tmp);
+            free(quot);
+        }
+
+        tmp = big_int_mul(base_copy, base_copy);
+        big_int* tmpmod = nullptr;
+        big_int_div(tmp, mod, &quot, &tmpmod);
+        big_int_free(base_copy);
+        base_copy = tmpmod;
+        big_int_free(tmp);
+        big_int_free(quot);
+
+        big_int* tmp_exp = big_int_shift_right(exp_copy, 1);
+        big_int_free(exp_copy);
+        exp_copy = tmp_exp;
+    }
+    big_int_free(base_copy);
+    big_int_free(exp_copy);
+
+    return result;
+}
