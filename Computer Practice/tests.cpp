@@ -514,10 +514,6 @@ void test_big_int_functions_decimal() {
     //big_int_print(difference);
     big_int_print_decimal(difference);
 
-    big_int* product = big_int_mul(num1, num2);
-    cout << "Product(C): ";
-    big_int_print_decimal(product);
-
     big_int* productk = big_int_mul_karatsuba(num1, num2);
     cout << "Product(K): ";
     big_int_print_decimal(productk);
@@ -540,7 +536,7 @@ void test_big_int_functions_decimal() {
     big_int_free(num2);
     big_int_free(sum);
     big_int_free(difference);
-    big_int_free(product);
+    big_int_free(productk);
     big_int_free(gcd);
 
     cout << "All tests completed." << endl;
@@ -570,28 +566,229 @@ void test_big_int_mod_pow_decimal() {
     //big_int_free(r2);
 }   
 
-void big_int_test_loop(ll n) {//big_int* (*func)(big_int*, big_int*)) {
-    int start = clock();
-    big_int* num1 = big_int_rnd(2048);
-    big_int* num2 = big_int_rnd(2048);
-    //big_int* n1 = big_int_get("11");
-    for (ll i = 0; i < n; i++) {
-        //big_int* t = big_int_lr_mod_pow(n1, num1, num2);/*func(num1, num2);*/
-        big_int* t = big_int_mul(num1, num2);
-        big_int_free(t);
+void big_int_test_loop(ll n) {
+    big_int* num1 = big_int_get("0");
+    big_int* num2 = big_int_get("0");
+    big_int* r;
+    ll start = clock();
+    ll creation_time = 0;
+    for (size_t i = 0; i < n; i++) {
+        ll creation_start = clock();
+
+        big_int_free(num1);
+        big_int_free(num2);
+        num1 = big_int_rnd(1024);
+        num2 = big_int_rnd(1024);
+
+        ll creation_end = clock();
+        creation_time += (creation_end - creation_start);
+
+        r = big_int_mul_karatsuba(num1, num2);
+
+        big_int_free(r);
     }
-    int end = clock();
-    cout << (double)(end - start) / CLOCKS_PER_SEC << endl;
+    ll end = clock();
+    double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+    cout /*<< "Total Time: "*/ << execution_time << endl;
 }
 
-big_int* big_int_rnd(int bytes_num) {
-    big_int* x = (big_int*)malloc(sizeof(big_int));
-    x->length = bytes_num;
-    unsigned char* xnumber = (unsigned char*)malloc(x->length * sizeof(char));
-    for (int i = 0; i < bytes_num; i++) {
-        xnumber[i] = rand();
+void calculate_mul_execution_time(ll n, ll q) {
+    big_int* num1 = big_int_get("0");
+    big_int* num2 = big_int_get("0");
+    big_int* r;
+    ll start = clock();
+    ll creation_time = 0;
+    for (size_t i = 0; i < n; i++) {
+        ll creation_start = clock();
+
+        big_int_free(num1);
+        big_int_free(num2);
+        num1 = big_int_rnd(q);
+        num2 = big_int_rnd(q);
+
+        ll creation_end = clock();
+        creation_time += (creation_end - creation_start);
+
+        r = big_int_mul(num1, num2);
+
+        big_int_free(r);
     }
-    x->number = xnumber;
-    x->sign = false;
-    return x;
+    ll end = clock();
+    double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+    cout /*<< "Total Time: "*/ << execution_time << endl;
+}
+
+void calculate_mul_karatsuba_execution_time(ll n, ll q) {
+    big_int* num1 = big_int_get("0");
+    big_int* num2 = big_int_get("0");
+    big_int* r;
+    ll start = clock();
+    ll creation_time = 0;
+    for (size_t i = 0; i < n; i++) {
+        ll creation_start = clock();
+
+        big_int_free(num1);
+        big_int_free(num2);
+        num1 = big_int_rnd(q);
+        num2 = big_int_rnd(q);
+
+        ll creation_end = clock();
+        creation_time += (creation_end - creation_start);
+
+        r = big_int_mul_karatsuba(num1, num2);
+
+        big_int_free(r);
+    }
+    ll end = clock();
+    double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+    cout /*<< "Total Time: "*/ << execution_time << endl;
+}
+
+void calculate_mul_execution_time(ll n) {
+    big_int* num1 = big_int_get("0");
+    big_int* num2 = big_int_get("0");
+    big_int* r;
+    ll start = clock();
+    ll creation_time = 0;
+    for (size_t i = 0; i < n; i++) {
+        ll creation_start = clock();
+
+        big_int_free(num1);
+        big_int_free(num2);
+        num1 = big_int_rnd(1024);
+        num2 = big_int_rnd(1024);
+
+        ll creation_end = clock();
+        creation_time += (creation_end - creation_start);
+
+        r = big_int_mul(num1, num2);
+
+        big_int_free(r);
+    }
+    ll end = clock();
+    double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+    cout /*<< "Total Time: "*/ << execution_time << endl;
+}
+
+void calculate_mul_karatsuba_execution_time(ll n) {
+    big_int* num1 = big_int_get("0");
+    big_int* num2 = big_int_get("0");
+    big_int* r;
+    ll start = clock();
+    ll creation_time = 0;
+    for (size_t i = 0; i < n; i++) {
+        ll creation_start = clock();
+
+        big_int_free(num1);
+        big_int_free(num2);
+        num1 = big_int_rnd(1024);
+        num2 = big_int_rnd(1024);
+
+        ll creation_end = clock();
+        creation_time += (creation_end - creation_start);
+
+        r = big_int_mul_karatsuba(num1, num2);
+
+        big_int_free(r);
+    }
+    ll end = clock();
+    double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+    cout /*<< "Total Time: "*/ << execution_time << endl;
+}
+
+void createBinaryNumbersFile() {
+    std::ofstream file("input.txt");
+    for (int i = 0; i < 3; i++) {
+        for (size_t i = 1; i <= 12; i++) {
+            std::string binary1, binary2;
+
+            ll length1 = 8 * pow(2, i);
+            ll length2 = 8 * pow(2, i);
+
+            for (size_t j = 0; j < length1; j++) {
+                binary1 += '1';
+            }
+
+            for (size_t j = 0; j < length2; j++) {
+                binary2 += '1';
+            }
+
+            file << binary1 << " " << binary2 << "\n";
+        }
+
+        for (size_t i = 12; i >= 1; i--) {
+            std::string binary1, binary2;
+
+            ll length1 = 8 * pow(2, i);
+            ll length2 = 8 * pow(2, 14 - i + 1);
+
+            for (size_t j = 0; j < length1; j++) {
+                binary1 += '1';
+            }
+
+            for (size_t j = 0; j < length2; j++) {
+                binary2 += '1';
+            }
+
+            file << binary1 << " " << binary2 << "\n";
+        }
+    }
+    file.close();
+}
+
+void OptimizePleaseKaratzuba() {
+    ifstream infile("input.txt");
+    string num1, num2;
+    ll creation_time = 0;
+    big_int* number1 = big_int_get("0");
+    big_int* number2 = big_int_get("0");
+    big_int* r;
+
+    ll start = clock();
+    while (infile >> num1 >> num2) {
+        ll creation_start = clock();
+        big_int_free(number1);
+        big_int_free(number2);
+        number1 = big_int_get(num1.c_str());
+        number2 = big_int_get(num2.c_str());
+        ll creation_end = clock();
+        creation_time += (creation_end - creation_start);
+        r = big_int_mul(number1, number2);
+        big_int_free(r);
+    }
+    ll end = clock();
+
+    big_int_free(number1);
+    big_int_free(number2);
+
+    double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+    cout << execution_time << endl;
+
+    cout << "--------\n";
+
+    for (size_t x = 500; x <= 1000; x++) {
+        ifstream infile("input.txt");
+        ll creation_time = 0;
+        big_int* number1 = big_int_get("0");
+        big_int* number2 = big_int_get("0");
+        big_int* r;
+        ll start = clock();
+        while (infile >> num1 >> num2) {
+            ll creation_start = clock();
+            big_int_free(number1);
+            big_int_free(number2);
+            number1 = big_int_get(num1.c_str());
+            number2 = big_int_get(num2.c_str());
+            ll creation_end = clock();
+            creation_time += (creation_end - creation_start);
+            r = big_int_mul_karatsuba(number1, number2);
+            big_int_free(r);
+        }
+        ll end = clock();
+        big_int_free(number1);
+        big_int_free(number2);
+        double execution_time = double(end - start - creation_time) / CLOCKS_PER_SEC;
+        cout << x << " - " <<  execution_time << endl;
+    }
+    infile.close();
 }

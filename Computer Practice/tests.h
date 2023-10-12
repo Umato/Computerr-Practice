@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <cmath>
 
 typedef long long ll;
 
@@ -31,6 +32,12 @@ void test_big_mod_pow_file();
 void test_big_int_functions_decimal();
 void test_big_int_mod_pow_decimal();
 void big_int_test_loop(ll n);
-big_int* big_int_rnd(int bytes_num);
+void calculate_mul_execution_time(ll n, ll q);
+void calculate_mul_karatsuba_execution_time(ll n, ll q);
+void calculate_mul_execution_time(ll n);
+void calculate_mul_karatsuba_execution_time(ll n);
+void createBinaryNumbersFile();
+void OptimizePleaseKaratzuba();
+
 
 #endif // TESTS_H

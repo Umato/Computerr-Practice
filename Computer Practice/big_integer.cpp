@@ -30,7 +30,6 @@ big_int* big_int_get(const int x) {
     return num;
 }
 
-
 big_int* big_int_get(const char* x) {
     if (!x) return NULL; // Не указывает ли x на NULL;
 
@@ -62,6 +61,7 @@ big_int* big_int_get(const char* x) {
             return NULL;
         }
     }
+    new_x = NULL;
     big_int_remove_zeroes(num);
     return num;
 }
@@ -780,12 +780,10 @@ big_int* big_int_bitwise_and(const big_int* n1, const big_int* n2) {
     return result;
 }
 
-// replace (multiplication by base) with (base adittions) if base is "small" 
 big_int* big_int_lr_mod_pow(const char base, const big_int* exponent, const big_int* mod) {
     if (!base || !exponent || !mod) return NULL;
 
     big_int* result = big_int_get(base - '0');
-    //big_int_print(result);
     if (!result) return NULL;
     big_int* zero = big_int_get("0");
     if (!zero) {
@@ -806,7 +804,6 @@ big_int* big_int_lr_mod_pow(const char base, const big_int* exponent, const big_
             result = rm;
 
             if ((exponent->number[i >> 3] >> (i & 7)) & 1) {
-                //big_int_mul_void(&result, base); // add result base times 
                 big_int* tmp = big_int_get("0");
                 for (char counter = 0; counter < base - 1 - '0'; counter++) {
                     big_int_add_void(&tmp, result);
@@ -989,11 +986,10 @@ big_int* big_int_slice(const big_int* n, size_t start, size_t end) {
 big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
     if (!n1 || !n2) return NULL;
 
-    if (n1->length + n2->length <= 4) {
+    if (n1->length + n2->length <= 100)  {
         return big_int_mul(n1, n2);
     }
 
-    //size_t x = (n1->length > n2->length) ? (n1->length + (n1->length & 1)) >> 1 : (n2->length + (n2->length & 1)) >> 1;
     size_t x = (n1->length + n2->length) >> 2;
     big_int* a = big_int_shift_right(n1, x << 3);
     big_int* b = big_int_slice(n1, 0, x);
@@ -1027,3 +1023,14 @@ big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
     return sm;
 }
 
+big_int* big_int_rnd(ll bytes_num) {
+    big_int* x = (big_int*)malloc(sizeof(big_int));
+    x->length = bytes_num;
+    unsigned char* xnumber = (unsigned char*)malloc(x->length * sizeof(char));
+    for (int i = 0; i < bytes_num; i++) {
+        xnumber[i] = rand();
+    }
+    x->number = xnumber;
+    x->sign = false;
+    return x;
+}

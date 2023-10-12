@@ -4,7 +4,7 @@
 #define BIG_INTEGER_H
 
 #include <iostream>
-
+#include <cmath>
 typedef long long ll;
 
 /// <summary>
@@ -223,6 +223,8 @@ void big_int_print_decimal(const big_int* num);
 big_int* big_int_get_dec(const char* x);
 
 big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2);
+
+big_int* big_int_rnd(ll bytes_num);
 
 // end - не включительно
 big_int* big_int_slice(const big_int* n, size_t start, size_t end);
