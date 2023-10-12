@@ -18,7 +18,7 @@ typedef struct big_int {
 	unsigned char* number;
 	bool sign;
 } big_int;
-
+big_int* big_int_get(const int x);
 /// <summary>
 /// Read string in binary format and create big_int object from it. 
 /// </summary>
@@ -70,14 +70,14 @@ big_int* big_int_sub(const big_int* n1, const big_int* n2);
 /// <param name="num">The number to be shifted.</param>
 /// <param name="n">The number of positions to shift.</param>
 /// <returns>Result of right shifting num by n positions, or NULL if memory allocation fails.</returns>
-big_int* big_int_shift_right(const big_int* num, int n);
+big_int* big_int_shift_right(const big_int* num, ll n);
 /// <summary>
 /// Performs a binary left shift on a big_int number.
 /// </summary>
 /// <param name="num">The number to be shifted.</param>
 /// <param name="n">The number of positions to shift.</param>
 /// <returns>Result of left shifting num by n positions, or NULL if memory allocation fails.</returns>
-big_int* big_int_shift_left(const big_int* num, int n);
+big_int* big_int_shift_left(const big_int* num, ll n);
 /// <summary>
 /// Finds the Greatest Common Divisor of two big_int numbers using binary Euclidean algorithm.
 /// </summary>
@@ -127,14 +127,105 @@ big_int* big_int_mul(const big_int* n1, const big_int* n2);
 /// <returns>The calculated power modulo, or NULL if memory allocation fails.</returns>
 big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod);
 /// <summary>
-/// Divides n1 by n2 and returns the quotient and the remainder.
+/// Sets a new length (in number of bytes) to a big_int object and reallocates memory accordingly.
 /// </summary>
-/// <param name="n1">The dividend.</param>
-/// <param name="n2">The divisor.</param>
-/// <param name="quotient">The quotient pointer.</param>
-/// <param name="remainder">The remainder pointer.</param>
-/// <returns>None. The result is stored in the given quotient and remainder.</returns>
-void big_int_div(const big_int* n1, const big_int* n2, big_int** quotient, big_int** remainder);
+/// <param name="num">Pointer to the big_int object.</param>
+/// <param name="new_length">The new length (in number of bytes).</param>
+void big_int_set_length(big_int* num, const size_t new_length);
+/// <summary>
+/// Performs the division of two big integers (n1 and n2) by repeated subtraction and computes the quotient and remainder.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object (dividend).</param>
+/// <param name="n2">Pointer to the second big_int object (divisor).</param>
+/// <param name="quotient">Pointer to a pointer storing the result of quotient after division.</param>
+/// <param name="remainder">Pointer to a pointer storing the result of remainder after division.</param>
+void big_int_div_by_sub(const big_int* n1, const big_int* n2, big_int** quotient, big_int** remainder);
+/// <summary>
+/// Sets a new length (in number of bytes) to a big_int object and reallocates memory accordingly.
+/// </summary>
+/// <param name="num">Pointer to the big_int object.</param>
+/// <param name="new_length">The new length (in number of bytes).</param>
+void big_int_set_length(big_int* num, const size_t new_length);
+/// <summary>
+/// Performs the division of two big integers (n1 and n2) by repeated subtraction and computes the quotient and remainder.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object (dividend).</param>
+/// <param name="n2">Pointer to the second big_int object (divisor).</param>
+/// <param name="quotient">Pointer to a pointer storing the result of quotient after division.</param>
+/// <param name="remainder">Pointer to a pointer storing the result of remainder after division.</param>
+void big_int_div_by_sub(const big_int* n1, const big_int* n2, big_int** quotient, big_int** remainder);
+/// <summary>
+/// Add the second big_int (n2) to the first one (n1). The result is stored in n1.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object. It also stores the result of the addition.</param>
+/// <param name="n2">Pointer to the second big_int object to be added.</param>
+void big_int_add_void(big_int** n1, const big_int* n2);
+/// <summary>
+/// Subtracts the second big_int (n2) from the first one (n1). The result is stored in n1.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object. It also stores the result of the subtraction.</param>
+/// <param name="n2">Pointer to the second big_int object to be subtracted.</param>
+void big_int_sub_void(big_int** n1, const big_int* n2);
+/// <summary>
+/// Shifts a big_int right by a certain number of bits.
+/// </summary>
+/// <param name="num">Pointer to the big_int object to be shifted.</param>
+/// <param name="n">The number of bits to shift right.</param>
+void big_int_shift_right_void(big_int** num, ll n);
+/// <summary>
+/// Shifts a big_int left by a certain number of bits.
+/// </summary>
+/// <param name="n1">Pointer to the big_int object to be shifted.</param>
+/// <param name="n">The number of bits to shift left.</param>
+void big_int_shift_left_void(big_int** n1, ll n);
+/// <summary>
+/// Multiplies the first big_int (n1) with the second one (n2). The result is stored in n1.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object. It also stores the result of multiplication.</param>
+/// <param name="n2">Pointer to the second big_int object to be multiplied.</param>
+void big_int_mul_void(big_int** n1, const big_int* n2);
+/// <summary>
+/// Performs the division of two big integers (N and D) and computes the quotient and remainder.
+/// </summary>
+/// <param name="num1">Pointer to the first big_int object (dividend).</param>
+/// <param name="num2">Pointer to the second big_int object (divisor).</param>
+/// <param name="quotient">Pointer to a pointer storing the result of quotient after division.</param>
+/// <param name="remainder">Pointer to a pointer storing the result of remainder after division.</param>
+void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, big_int** remainder);
+/// <summary>
+/// Raise a number to the power modulo another number.
+/// </summary>
+/// <param name="base">The base number.</param>
+/// <param name="exponent">The exponent.</param>
+/// <param name="mod">The modulating number.</param>
+/// <returns>The calculated power modulo, or NULL if memory allocation fails.</returns>
+big_int* big_int_lr_mod_pow(const char base, const big_int* exponent, const big_int* mod);
+big_int* big_int_lr_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod);
+/// <summary>
+/// Performs the modulo operation on two big integers (n1 and n2), returning the remainder after division of n1 by n2.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object (dividend).</param>
+/// <param name="n2">Pointer to the second big_int object (divisor).</param>
+/// <returns>Remainder of the division of n1 by n2, or NULL if memory allocation fails.</returns>
+big_int* big_int_mod(const big_int* n1, const big_int* n2);
+/// <summary>
+/// Performs division of two big integers (n1 and n2) and returns only quotient.
+/// </summary>
+/// <param name="n1">Pointer to the first big_int object (dividend).</param>
+/// <param name="n2">Pointer to the second big_int object (divisor).</param>
+/// <returns>Quotient of the division of n1 by n2, or NULL if memory allocation fails.</returns>
+big_int* big_int_div_quotient(const big_int* n1, const big_int* n2);
+
+big_int* big_int_bitwise_and(const big_int* n1, const big_int* n2);
+
+void big_int_print_decimal(const big_int* num);
+
+big_int* big_int_get_dec(const char* x);
+
+big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2);
+
+// end - не включительно
+big_int* big_int_slice(const big_int* n, size_t start, size_t end);
 
 #endif // BIG_INT_H
 

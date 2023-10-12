@@ -27,5 +27,10 @@ void test_big_int_multiplication();
 void test_big_int_euclid_binary_from_file();
 void test_big_int_div();
 void test_big_int_mod_pow();
+void test_big_mod_pow_file();
+void test_big_int_functions_decimal();
+void test_big_int_mod_pow_decimal();
+void big_int_test_loop(ll n);
+big_int* big_int_rnd(int bytes_num);
 
 #endif // TESTS_H

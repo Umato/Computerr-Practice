@@ -102,4 +102,7 @@ ll chinese_reminder(const ll* remainders, const ll* modules, const ll num_equati
 /// <returns>A number x such that x modulo modules[i] equals to remainders[i] for every i from 0 to n.</returns>
 ll chinese_remainder_iterative(const ll* remainders, const ll* modules, const ll n);
 
+ll cti(const char* ch);
+
+
 #endif // ALGORITHMS_H

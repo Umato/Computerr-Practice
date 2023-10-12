@@ -435,17 +435,163 @@ void test_big_int_mod_pow() {
     big_int* exponent = big_int_get(str2);
     big_int* mod = big_int_get(str3);
 
-    big_int* expected_result = big_int_mod_pow(base, exponent, mod);
+    //big_int* expected_result = big_int_mod_pow(base, exponent, mod);
+    big_int* expected_result_lr = big_int_lr_mod_pow(*str1, exponent, mod);
 
     cout << "Modular exponentiation of (" << str1 << " ^ " << str2 << ") mod " << str3 << "\n";
+    //cout << "calculated as: ";
+    //big_int_print(expected_result);
     cout << "calculated as: ";
-    big_int_print(expected_result);
+    big_int_print(expected_result_lr);
     cout << "\n";
 
     big_int_free(base);
     big_int_free(exponent);
     big_int_free(mod);
-    big_int_free(expected_result);
+    //big_int_free(expected_result);
 
     cout << "All tests completed." << endl;
+}
+
+void test_big_mod_pow_file() {
+    ifstream infile("input.txt");
+    string base, exponent, mod, result;
+
+    while (infile >> base >> exponent >> mod >> result) {
+        big_int* b = big_int_get(base.c_str());
+        big_int* e = big_int_get(exponent.c_str());
+        big_int* m = big_int_get(mod.c_str());
+        big_int* r = big_int_get(result.c_str());
+
+        big_int* res = big_int_mod_pow(b, e, m);
+
+        if (!big_int_eq(res, r)) {
+            cout << "Test failed." << endl;
+            cout << "Input:\n";
+            big_int_print(b);
+            cout << " and ";
+            big_int_print(e);
+            cout << " and ";
+            big_int_print(m);
+            cout << "\nExpected result: ";
+            big_int_print(r);
+            cout << "; Actual quotient: ";
+            big_int_print(res);
+            cout << "\nExpected remainder: ";
+        }
+
+        big_int_free(b);
+        big_int_free(e);
+        big_int_free(m);
+        big_int_free(r);
+        big_int_free(res);
+    }
+
+    infile.close();
+    cout << "All tests completed." << endl;
+}
+
+void test_big_int_functions_decimal() {
+    char str1[1024];
+    char str2[1024];
+    cin >> str1;
+    cin >> str2;
+
+    big_int* num1 = big_int_get_dec(str1);
+    big_int* num2 = big_int_get_dec(str2);
+
+    cout << "Number 1: ";
+    big_int_print_decimal(num1);
+    cout << "Number 2: ";
+    big_int_print_decimal(num2);
+
+    big_int* sum = big_int_add(num1, num2);
+    cout << "Sum: ";
+    big_int_print_decimal(sum);
+
+    big_int* difference = big_int_sub(num1, num2);
+    cout << "Difference: ";
+    //big_int_print(difference);
+    big_int_print_decimal(difference);
+
+    big_int* product = big_int_mul(num1, num2);
+    cout << "Product(C): ";
+    big_int_print_decimal(product);
+
+    big_int* productk = big_int_mul_karatsuba(num1, num2);
+    cout << "Product(K): ";
+    big_int_print_decimal(productk);
+
+    big_int* quotient;
+    big_int* remainder;
+    big_int_div(num1, num2, &quotient, &remainder);
+    cout << "Divide num1 by num2: " << endl;
+    cout << "Quotient: ";
+    big_int_print_decimal(quotient);
+    cout << "Remainder: ";
+    big_int_print_decimal(remainder);
+
+    big_int* gcd = big_int_euclid_binary(num1, num2);
+    cout << "GCD: ";
+    big_int_print_decimal(gcd);
+
+
+    big_int_free(num1);
+    big_int_free(num2);
+    big_int_free(sum);
+    big_int_free(difference);
+    big_int_free(product);
+    big_int_free(gcd);
+
+    cout << "All tests completed." << endl;
+}
+
+void test_big_int_mod_pow_decimal() {
+    char str1[1024];
+    char str2[1024];
+    char str3[1024];
+    cin >> str1;
+    cin >> str2;
+    cin >> str3;
+
+    big_int* num1 = big_int_get_dec(str1);
+    big_int* num2 = big_int_get_dec(str2);
+    big_int* num3 = big_int_get_dec(str3);
+
+    big_int* r1 = big_int_mod_pow(num1, num2, num3);
+    //big_int* r2 = big_int_lr_mod_pow(num1, num2, num3);
+    big_int_print_decimal(r1);
+    //big_int_print_decimal(r2);
+
+    big_int_free(num1);
+    big_int_free(num2);
+    big_int_free(num3);
+    big_int_free(r1);
+    //big_int_free(r2);
+}   
+
+void big_int_test_loop(ll n) {//big_int* (*func)(big_int*, big_int*)) {
+    int start = clock();
+    big_int* num1 = big_int_rnd(2048);
+    big_int* num2 = big_int_rnd(2048);
+    //big_int* n1 = big_int_get("11");
+    for (ll i = 0; i < n; i++) {
+        //big_int* t = big_int_lr_mod_pow(n1, num1, num2);/*func(num1, num2);*/
+        big_int* t = big_int_mul(num1, num2);
+        big_int_free(t);
+    }
+    int end = clock();
+    cout << (double)(end - start) / CLOCKS_PER_SEC << endl;
+}
+
+big_int* big_int_rnd(int bytes_num) {
+    big_int* x = (big_int*)malloc(sizeof(big_int));
+    x->length = bytes_num;
+    unsigned char* xnumber = (unsigned char*)malloc(x->length * sizeof(char));
+    for (int i = 0; i < bytes_num; i++) {
+        xnumber[i] = rand();
+    }
+    x->number = xnumber;
+    x->sign = false;
+    return x;
 }

@@ -124,7 +124,7 @@ ll linear_diophantine(const ll* coefficients, const ll n, ll* result, const ll t
         return 0;
     }
     else {
-        int mult = target / gcd;
+        ll mult = target / gcd;
         for (int j = 0; j < n; j++) {
             result[j] *= mult;
         }
@@ -175,4 +175,21 @@ ll chinese_remainder_iterative(const ll* remainders, const ll* modules, const ll
         prev_remainder = solution % prev_module;
     }
     return ((solution % prev_module) + prev_module) % prev_module;
+}
+
+ll cti(const char* ch) {
+    ll result = 0;
+    ll sign = 1;
+
+    if (*ch == '-') {
+        sign = -1;
+        ch++;
+    }
+
+    while (*ch >= '0' && *ch <= '9') {
+        result = result * 10 + (*ch - '0');
+        ch++;
+    }
+
+    return result * sign;
 }
