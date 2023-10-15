@@ -88,9 +88,9 @@ void big_int_print(const big_int* num) {
 }
 
 void big_int_free(big_int* num) {
-    if (num == NULL) return;
+    if (!num) return;
     num->length = 0;
-    if (num->number != NULL) {
+    if (num->number) {
         free(num->number);
         num->number = NULL;
     }
@@ -370,7 +370,7 @@ big_int* big_int_mul(const big_int* n1, const big_int* n2){
         return big_int_get("0");
     }
 
-    result->sign = n1->sign ^ n2->sign;
+    //result->sign = n1->sign ^ n2->sign;
     for (size_t i = 0; i < n1->length; i++) {
         for (size_t j = 0; j < n2->length; j++) {
             unsigned short mult = n1->number[i] * n2->number[j];
@@ -385,6 +385,7 @@ big_int* big_int_mul(const big_int* n1, const big_int* n2){
             }
         }
     }
+    result->sign = !(big_int_eq(big_int_get("0"), result)) ? n1->sign ^ n2->sign : false;
     big_int_remove_zeroes(result);
     return result;
 }
@@ -638,7 +639,7 @@ void big_int_shift_left_void(big_int** num, ll n) {
 void big_int_mul_void(big_int** n1, const big_int* n2) {
     if (!n1 || !n2) return;
 
-    big_int* temp = big_int_mul(*n1, n2);
+    big_int* temp = big_int_mul_karatsuba(*n1, n2);
     if (!temp) return;
 
     big_int_free(*n1);
@@ -830,13 +831,16 @@ big_int* big_int_lr_mod_pow(const big_int* base, const big_int* exponent, const 
 
     big_int* result = big_int_mod(base, mod);
     if (!result) return NULL;
+
     big_int* zero = big_int_get("0");
     if (!zero) {
         big_int_free(result);
         return NULL;
     }
+
     const size_t total_bits = exponent->length << 3;
     bool c = false;
+
     for (int i = total_bits - 1; i >= 0; --i) {
         if (c) {
             big_int_mul_void(&result, result);
@@ -934,20 +938,15 @@ big_int* big_int_get_dec(const char* x) {
         big_int_free(res);
         return NULL;
     }
-
-    for (; *x; ++x) {
-        if (*x == '-') {
-            res->sign = true;
-            continue;
-        }
-
-        if (!isdigit(*x)) {
+    res->sign = *x == '-';
+    for (const char* new_x = x + res->sign; *new_x; ++new_x) {
+        if (!isdigit(*new_x)) {
             big_int_free(res);
             big_int_free(ten);
             return NULL;
         }
 
-        unsigned char val = (unsigned char)(*x - '0');
+        unsigned char val = (unsigned char)(*new_x - '0');
         big_int* digit = big_int_get("0");
         digit->number[0] = val;
 
@@ -956,7 +955,6 @@ big_int* big_int_get_dec(const char* x) {
 
         big_int_free(digit);
     }
-
     big_int_free(ten);
     return res;
 }
@@ -976,61 +974,177 @@ big_int* big_int_slice(const big_int* n, size_t start, size_t end) {
 
     result->sign = n->sign;
 
-    for (size_t i = 0; i < result->length; ++i) {
-        result->number[i] = n->number[start + i];
-    }
+    memcpy(result->number, n->number + start, result->length);
 
     return result;
 }
 
 big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
-    if (!n1 || !n2) return NULL;
+    assert(n1 != nullptr && n2 != nullptr);
 
     if (n1->length + n2->length <= 100)  {
         return big_int_mul(n1, n2);
     }
 
     size_t x = (n1->length + n2->length) >> 2;
-    big_int* a = big_int_shift_right(n1, x << 3);
-    big_int* b = big_int_slice(n1, 0, x);
-    big_int* c = big_int_shift_right(n2, x << 3);
-    big_int* d = big_int_slice(n2, 0, x);
 
-    big_int* ac = big_int_mul_karatsuba(a, c); /*(ac)*/
+    big_int* a = big_int_shift_right(n1, x << 3); a->sign = false;
+    big_int* b = big_int_slice(n1, 0, x); b->sign = false;
+    big_int* c = big_int_shift_right(n2, x << 3); c->sign = false;
+    big_int* d = big_int_slice(n2, 0, x); d->sign = false;
 
-    big_int* bd = big_int_mul_karatsuba(b, d); /*(bd)*/
-    big_int* sb = big_int_add(ac, bd); // (ac + bd)
-    big_int_add_void(&a, b); // a + b
-    big_int_add_void(&c, d); // c + d
+    big_int* ac = big_int_mul_karatsuba(a, c); /*(a * c)*/
+    big_int* bd = big_int_mul_karatsuba(b, d); /*(b * d)*/
 
-    big_int* sm = big_int_mul_karatsuba(a, c); // (a + b) * (c + d)
-    big_int_sub_void(&sm, sb); // sm = (a + b) * (c + d) - sb (sb = ac + bd)
+    big_int* ac_bd = big_int_add(ac, bd); // (ac + bd)
 
-    big_int_shift_left_void(&ac, 2 * (x << 3));
-    big_int_shift_left_void(&sm, (x << 3));
-    big_int_add_void(&sm, ac);
-    big_int_add_void(&sm, bd);
+    big_int_add_void(&a, b); // a = a + b
+    big_int_add_void(&c, d); // c = c + d
 
-    big_int_free(a);
-    big_int_free(b);
-    big_int_free(c);
+    big_int_free(b); // Больше не нужны
     big_int_free(d);
-    big_int_free(sb);
+
+    big_int* res = big_int_mul_karatsuba(a, c); // res = (a + b) * (c + d)
+    big_int_free(a); // Больше не нужны
+    big_int_free(c);
+
+    big_int_sub_void(&res, ac_bd); // res = (a + b) * (c + d) - ac_bd (ac_bd = ac + bd)
+    big_int_free(ac_bd);
+
+    big_int_shift_left_void(&ac, (x << 4)); // ac * x ^ 2
+    big_int_shift_left_void(&res, (x << 3)); // res * x
+
+    big_int_add_void(&res, ac); // res = res + ac
+    big_int_add_void(&res, bd); // res = res + bd
+
     big_int_free(ac);
     big_int_free(bd);
 
-    sm->sign = !(big_int_eq(sm, big_int_get("0"))) ? n1->sign ^ n2->sign : false;
-    return sm;
+    res->sign = !(big_int_eq(res, big_int_get("0"))) ? n1->sign ^ n2->sign : false;
+    return res;
 }
 
-big_int* big_int_rnd(ll bytes_num) {
+//big_int* big_int_rnd(size_t bytes_num) {
+//    big_int* x = (big_int*)malloc(sizeof(big_int));
+//    x->length = bytes_num;
+//    x->sign = false;
+//    unsigned char* xnumber = (unsigned char*)malloc(x->length * sizeof(char));
+//    for (int i = 0; i < bytes_num; i++) {
+//        xnumber[i] = rand();
+//    }
+//    x->number = xnumber;
+//    return x;
+//}
+big_int* big_int_rnd(size_t bytes_num) {
+    srand(time(NULL));
+
     big_int* x = (big_int*)malloc(sizeof(big_int));
+    if (!x) return NULL;
+
     x->length = bytes_num;
-    unsigned char* xnumber = (unsigned char*)malloc(x->length * sizeof(char));
-    for (int i = 0; i < bytes_num; i++) {
-        xnumber[i] = rand();
-    }
-    x->number = xnumber;
     x->sign = false;
+
+    x->number = (unsigned char*)malloc(x->length * sizeof(unsigned char));
+    if (!x->number) {
+        free(x);
+        return NULL;
+    }
+    for (size_t i = 0; i < x->length; i++) {
+        x->number[i] = rand();
+    }
     return x;
+}
+
+big_int* generate_big_int_prime(size_t bytes_num) {
+    big_int* num;
+    do {
+        num = big_int_rnd(bytes_num);
+        //big_int_print(num);
+        if (!num) return NULL;
+    } while (!(num->number[0] & 1) && !miller_rabin_test_big_int(num, 10000));
+
+    return num;
+}
+// m k
+bool miller_rabin_test_big_int(const big_int* num, size_t iterations) {
+    big_int* two = big_int_get("10");
+    big_int* one = big_int_get("1");
+    big_int* minus_one = big_int_get("-1");
+    if (!(num->number[0] & 1)) {
+        return false;
+    }
+
+    big_int* num_minus_one = big_int_sub(num, one); // t
+    big_int* num_minus_one1 = big_int_sub(num, one); // t
+    big_int* s = big_int_get("0");
+    while (!(num_minus_one->number[0] & 1)) {
+        big_int_shift_right_void(&num_minus_one, 1);
+        big_int_add_void(&s, one);
+    }
+
+    for (size_t _ = 0; _ < iterations; _++) {
+        big_int* b = big_int_generate(num);;
+        big_int* x = big_int_mod_pow(b, num_minus_one, num);
+        if (big_int_eq(x, one) || big_int_eq(x, minus_one)) {
+            continue;
+        }
+
+        big_int* i = big_int_get("0");
+        while (!big_int_geq(s, i)) {
+            big_int_mul_void(&x, x);
+            big_int* temp_x = big_int_mod(x, num);
+            big_int_free(x);
+            x = temp_x;
+
+            big_int_add_void(&i, one);
+            if (big_int_eq(x, one)) return false;
+            else if (big_int_eq(x, minus_one)) break;
+        }
+
+        if (big_int_eq(i, s) && !big_int_eq(x, num_minus_one1)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void big_int_copy_to(big_int* dst, const big_int* src) {
+    if (!dst || !src) return;
+
+    free(dst->number);
+
+    dst->length = src->length;
+    dst->sign = src->sign;
+
+    dst->number = (unsigned char*)malloc(sizeof(unsigned char) * src->length);
+    if (!dst->number) {
+        return;
+    }
+
+    for (size_t i = 0; i < src->length; i++) {
+        dst->number[i] = src->number[i];
+    }
+}
+
+big_int* big_int_generate(const big_int* num) {
+    big_int* two = big_int_get("10");
+    big_int* r = big_int_rnd(num->length);
+
+    while (!(big_int_geq(r, two) && !big_int_geq(r, num))) {
+        big_int_free(r);
+        r = big_int_rnd(num->length);
+    }
+
+    big_int_free(two);
+    return r;
+}
+size_t big_int_length(big_int* num) {
+    if (!num) return 0;
+    size_t len = ((num->length - 1) << 3);
+    bool flag = false;
+    for (size_t i = 256; i >= 1; i >>= 1) {
+        if (num->number[num->length - 1] & i) flag = true;
+        len += flag;
+    }
+    return len;
 }

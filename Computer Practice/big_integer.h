@@ -3,8 +3,13 @@
 #ifndef BIG_INTEGER_H
 #define BIG_INTEGER_H
 
+//#define NDEBUG 
+
 #include <iostream>
-#include <cmath>
+#include <cassert>
+//#include <cmath>
+
+
 typedef long long ll;
 
 /// <summary>
@@ -18,6 +23,7 @@ typedef struct big_int {
 	unsigned char* number;
 	bool sign;
 } big_int;
+
 big_int* big_int_get(const int x);
 /// <summary>
 /// Read string in binary format and create big_int object from it. 
@@ -224,11 +230,17 @@ big_int* big_int_get_dec(const char* x);
 
 big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2);
 
-big_int* big_int_rnd(ll bytes_num);
+big_int* big_int_rnd(size_t bytes_num);
 
 // end - не включительно
 big_int* big_int_slice(const big_int* n, size_t start, size_t end);
 
+
+big_int* generate_big_int_prime(size_t bytes_num);
+bool miller_rabin_test_big_int(const big_int* num, size_t iterations);
+void big_int_copy_to(big_int* dst, const big_int* src);
+size_t big_int_length(big_int* num);
+big_int* big_int_generate(const big_int* num);
 #endif // BIG_INT_H
 
 
