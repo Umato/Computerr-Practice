@@ -5,7 +5,9 @@
 
 #include <iostream>
 
+typedef unsigned long long ull;
 typedef long long ll;
+
 /// <summary>
 /// Compute the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
 /// </summary>
@@ -104,5 +106,6 @@ ll chinese_remainder_iterative(const ll* remainders, const ll* modules, const ll
 
 ll cti(const char* ch);
 
+bool is_prime(ll num);
 
 #endif // ALGORITHMS_H

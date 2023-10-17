@@ -92,7 +92,7 @@ void big_int_free(big_int* num) {
     num->length = 0;
     if (num->number) {
         free(num->number);
-        num->number = NULL;
+        num->number = nullptr;
     }
     free(num);
 }
@@ -385,8 +385,10 @@ big_int* big_int_mul(const big_int* n1, const big_int* n2){
             }
         }
     }
-    result->sign = !(big_int_eq(big_int_get("0"), result)) ? n1->sign ^ n2->sign : false;
+    big_int* zero = big_int_get("0");
+    result->sign = !(big_int_eq(zero, result)) ? n1->sign ^ n2->sign : false;
     big_int_remove_zeroes(result);
+    big_int_free(zero);
     return result;
 }
 
@@ -456,6 +458,7 @@ big_int* big_int_euclid_binary(const big_int* x, const big_int* y) {
             return zero;
         }
     }
+
     big_int_shift_left_void(&b, power);
     big_int_free(a);
     if (!b) {
@@ -532,22 +535,26 @@ void big_int_div_by_sub(const big_int* n1, const big_int* n2, big_int** quotient
 }
 
 big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod) {
-    if (!base || !exponent || !mod) return NULL;
+    if (!base || !exponent || !mod) return nullptr;
 
+    big_int* zero = big_int_get("0");
     big_int* result = big_int_get("1");
-    if (!result) return NULL;
-
+    if (!result) {
+        big_int_free(zero);
+        return nullptr;
+    }
     big_int* base_copy = big_int_copy(base);
     if (!base_copy) {
         big_int_free(result);
-        return NULL;
+        return nullptr;
     }
 
     big_int* exp_copy = big_int_copy(exponent);
     if (!exp_copy) {
         big_int_free(result);
+        big_int_free(zero);
         big_int_free(base_copy);
-        return NULL;
+        return nullptr;
     }
 
     big_int* rem = big_int_mod(base_copy, mod);
@@ -555,11 +562,14 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
         big_int_free(result);
         big_int_free(base_copy);
         big_int_free(exp_copy);
-        return NULL;
+        big_int_free(zero);
+        return nullptr;
     }
+
+    big_int_free(base_copy);
     base_copy = rem;
     
-    while (!big_int_eq(exp_copy, big_int_get("0"))) {
+    while (!big_int_eq(exp_copy, zero)) {
         big_int* tmp = nullptr;
 
         if (exp_copy->number[0] & 1) {
@@ -569,7 +579,8 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
                 big_int_free(result);
                 big_int_free(base_copy);
                 big_int_free(exp_copy);
-                return NULL;
+                big_int_free(zero);
+                return nullptr;
             }
             big_int_free(result);
             result = tmpmod;
@@ -581,8 +592,9 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
         if (!tmpmod) {
             big_int_free(result);
             big_int_free(base_copy);
+            big_int_free(zero);
             big_int_free(exp_copy);
-            return NULL;
+            return nullptr;
         }
         big_int_free(base_copy);
         base_copy = tmpmod;
@@ -592,6 +604,7 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
     }
     big_int_free(base_copy);
     big_int_free(exp_copy);
+    big_int_free(zero);
 
     return result;
 }
@@ -667,14 +680,16 @@ void big_int_set_length(big_int* num, const size_t new_length) {
 
 void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, big_int** remainder) {
     if (!num1 || !num2) return;
-
-    if (big_int_eq(num2, big_int_get("0"))) return;
+    big_int* zero = big_int_get("0");
+    big_int* one = big_int_get("1");
+    if (big_int_eq(num2, zero)) return;
 
     big_int* q = big_int_get("0");
     big_int* r = big_int_get("0");
     if (!q || !r) {
         big_int_free(q);
         big_int_free(r);
+        big_int_free(zero);
         return;
     }
 
@@ -689,6 +704,7 @@ void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, b
         big_int_free(b);
         big_int_free(q);
         big_int_free(r);
+        big_int_free(zero);
         return;
     }
 
@@ -698,6 +714,7 @@ void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, b
             big_int_free(a);
             big_int_free(b);
             big_int_free(q);
+            big_int_free(zero);
             return;
         }
         r->number[0] |= ((num1->number[i >> 3] >> (i & 7)) & 1);  
@@ -708,36 +725,41 @@ void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, b
                 big_int_free(a);
                 big_int_free(b);
                 big_int_free(q);
+                big_int_free(zero);
                 return;
             }
             q->number[i >> 3] |= (1 << (i & 7));
         }
     }
 
-    if (num1->sign && !big_int_eq(r, big_int_get("0"))) {
+    if (num1->sign && !big_int_eq(r, zero)) {
         big_int_sub_void(&r, b);
-        big_int_add_void(&q, big_int_get("1"));
+        big_int_add_void(&q, one);
         if (!r || !q) {
             big_int_free(a);
             big_int_free(b);
             big_int_free(q);
             big_int_free(r);
+            big_int_free(zero);
             return;
         }
     }
     q->sign = false;
-    q->sign = !big_int_eq(q, big_int_get("0")) ? num1->sign ^ num2->sign : false;
+    q->sign = !big_int_eq(q, zero) ? num1->sign ^ num2->sign : false;
     r->sign = false;
     big_int_free(a);
     big_int_free(b);
+    big_int_free(zero);
+    big_int_free(one);
     big_int_remove_zeroes(q);
     big_int_remove_zeroes(r);
     *quotient = q;
     *remainder = r;
+
 }
 
 big_int* big_int_mod(const big_int* n1, const big_int* n2) {
-    if (!n1 || !n2) return NULL;
+    if (!n1 || !n2) return nullptr;
 
     big_int* quotient = nullptr;
     big_int* reminder = nullptr;
@@ -790,7 +812,7 @@ big_int* big_int_lr_mod_pow(const char base, const big_int* exponent, const big_
     if (!zero) {
         big_int_free(result);
         return NULL;
-    }
+    }   
     const size_t total_bits = exponent->length << 3;
     bool c = false;
     for (int i = total_bits - 1; i >= 0; --i) {
@@ -874,7 +896,7 @@ void big_int_print_decimal(const big_int* num) {
     if (!num) return;
 
     if (num->length == 1 && num->number[0] == 0) {
-        cout << ("0\n");
+        cout << "0\n";
         return;
     }
 
@@ -982,7 +1004,7 @@ big_int* big_int_slice(const big_int* n, size_t start, size_t end) {
 big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
     assert(n1 != nullptr && n2 != nullptr);
 
-    if (n1->length + n2->length <= 100)  {
+    if (n1->length + n2->length <= 100) {
         return big_int_mul(n1, n2);
     }
 
@@ -1024,19 +1046,7 @@ big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
     return res;
 }
 
-//big_int* big_int_rnd(size_t bytes_num) {
-//    big_int* x = (big_int*)malloc(sizeof(big_int));
-//    x->length = bytes_num;
-//    x->sign = false;
-//    unsigned char* xnumber = (unsigned char*)malloc(x->length * sizeof(char));
-//    for (int i = 0; i < bytes_num; i++) {
-//        xnumber[i] = rand();
-//    }
-//    x->number = xnumber;
-//    return x;
-//}
 big_int* big_int_rnd(size_t bytes_num) {
-    srand(time(NULL));
 
     big_int* x = (big_int*)malloc(sizeof(big_int));
     if (!x) return NULL;
@@ -1056,89 +1066,148 @@ big_int* big_int_rnd(size_t bytes_num) {
 }
 
 big_int* generate_big_int_prime(size_t bytes_num) {
-    big_int* num;
-    do {
-        num = big_int_rnd(bytes_num);
-        //big_int_print(num);
-        if (!num) return NULL;
-    } while (!(num->number[0] & 1) && !miller_rabin_test_big_int(num, 10000));
-
-    return num;
+    big_int* ans = big_int_rnd_odd(bytes_num);
+    ll start = clock();
+    while (!(miller_rabin_test_big_int(ans, 30))) {
+        ll end = clock();
+        big_int_free(ans);
+        ans = big_int_rnd_odd(bytes_num);
+        double execution_time = double(end - start) / CLOCKS_PER_SEC;
+        cout /*<< "Total Time: "*/ << execution_time << endl;
+        start = clock();
+    }
+    return ans;
 }
-// m k
+ 
 bool miller_rabin_test_big_int(const big_int* num, size_t iterations) {
-    big_int* two = big_int_get("10");
+    if (!num || iterations <= 0) return false;
+
     big_int* one = big_int_get("1");
-    big_int* minus_one = big_int_get("-1");
+    if (big_int_eq(one, num)) {
+        big_int_free(one);
+        return false;
+    }
+    
+    big_int* two = big_int_get("10");
+    if (big_int_eq(two, num)) {
+        big_int_free(one);
+        big_int_free(two);
+        return true;
+    }
+
+    big_int* zero = big_int_get("0");
+
+
     if (!(num->number[0] & 1)) {
+        big_int_free(one);
+        big_int_free(zero);
+        big_int_free(two);
         return false;
     }
 
-    big_int* num_minus_one = big_int_sub(num, one); // t
-    big_int* num_minus_one1 = big_int_sub(num, one); // t
-    big_int* s = big_int_get("0");
-    while (!(num_minus_one->number[0] & 1)) {
-        big_int_shift_right_void(&num_minus_one, 1);
-        big_int_add_void(&s, one);
+    big_int* m = big_int_sub(num, one);
+    big_int* m_copy = big_int_copy(m);
+    size_t s = 0;
+
+    while (!(m->number[0] & 1) && !big_int_eq(m, zero)) {
+        big_int_shift_right_void(&m, 1);
+        s++;
     }
 
     for (size_t _ = 0; _ < iterations; _++) {
-        big_int* b = big_int_generate(num);;
-        big_int* x = big_int_mod_pow(b, num_minus_one, num);
-        if (big_int_eq(x, one) || big_int_eq(x, minus_one)) {
+        //big_int* b = big_int_generate(m);
+        big_int* b = big_int_generate_range(two, m_copy);
+        big_int* x = big_int_mod_pow(b, m, num);
+
+        if (big_int_eq(x, one) || big_int_eq(x, m_copy)) {
+            big_int_free(b);
+            big_int_free(x);
             continue;
         }
 
-        big_int* i = big_int_get("0");
-        while (!big_int_geq(s, i)) {
-            big_int_mul_void(&x, x);
-            big_int* temp_x = big_int_mod(x, num);
+        bool continue_flag = false;
+        for (size_t i = 0; i < s - 1; i++) {
+            big_int* temp_x = big_int_mod_pow(x, two, num);
             big_int_free(x);
+
             x = temp_x;
 
-            big_int_add_void(&i, one);
-            if (big_int_eq(x, one)) return false;
-            else if (big_int_eq(x, minus_one)) break;
+            if (big_int_eq(x, one)) {
+                big_int_free(b);
+                big_int_free(x);
+                big_int_free(m);
+                big_int_free(m_copy);
+                big_int_free(one);
+                big_int_free(zero);
+                big_int_free(two);
+                return false;
+            }
+
+            if (big_int_eq(x, m_copy)) {
+                continue_flag = true;
+                break;
+            }
         }
 
-        if (big_int_eq(i, s) && !big_int_eq(x, num_minus_one1)) {
-            return false;
+        if (continue_flag) {
+            big_int_free(b);
+            big_int_free(x);
+            continue;
         }
+
+        big_int_free(b);
+        big_int_free(x);
+        big_int_free(zero);
+        big_int_free(one);
+        big_int_free(two);
+        big_int_free(m_copy);
+        big_int_free(m);
+        return false;
     }
+
+    big_int_free(m);
+    big_int_free(m_copy);
+    big_int_free(zero);
+    big_int_free(one);
+    big_int_free(two);
     return true;
 }
 
-void big_int_copy_to(big_int* dst, const big_int* src) {
-    if (!dst || !src) return;
+big_int* big_int_generate_range(const big_int* n1, const big_int* n2) {
+    //assert(!n1 || !n2);
+    //assert(big_int_geq(n2, n1));
 
-    free(dst->number);
+    big_int* difference = big_int_sub(n2, n1); //this function should subtract two big_int's
+    size_t num_bytes = difference->length;
 
-    dst->length = src->length;
-    dst->sign = src->sign;
+    big_int* rnd_num = nullptr;
 
-    dst->number = (unsigned char*)malloc(sizeof(unsigned char) * src->length);
-    if (!dst->number) {
-        return;
-    }
+    do {
+        if (rnd_num != nullptr) big_int_free(rnd_num);
+        rnd_num = big_int_rnd(num_bytes);
+    } while (!(big_int_geq(rnd_num, n1) && !big_int_geq(rnd_num, n2)));
 
-    for (size_t i = 0; i < src->length; i++) {
-        dst->number[i] = src->number[i];
-    }
+    big_int* result = big_int_add(n1, rnd_num); //this function should add two big_int's
+
+    big_int_free(difference);
+    big_int_free(rnd_num);
+
+    return result;
 }
 
 big_int* big_int_generate(const big_int* num) {
-    big_int* two = big_int_get("10");
-    big_int* r = big_int_rnd(num->length);
 
-    while (!(big_int_geq(r, two) && !big_int_geq(r, num))) {
+    big_int* r = big_int_rnd(num->length);
+    big_int* two = big_int_get("10");
+    while (!(big_int_geq(r, two) || !big_int_geq(r, num))) {
         big_int_free(r);
         r = big_int_rnd(num->length);
     }
-
     big_int_free(two);
     return r;
 }
-size_t big_int_length(big_int* num) {
+
+size_t big_int_length(const big_int* num) {
     if (!num) return 0;
     size_t len = ((num->length - 1) << 3);
     bool flag = false;
@@ -1147,4 +1216,24 @@ size_t big_int_length(big_int* num) {
         len += flag;
     }
     return len;
+}
+
+big_int* big_int_rnd_odd(size_t bytes_num) {
+    big_int* x = (big_int*)malloc(sizeof(big_int));
+    if (!x) return NULL;
+
+    x->length = bytes_num;
+    x->sign = false;
+
+    x->number = (unsigned char*)malloc(x->length * sizeof(unsigned char));
+    if (!x->number) {
+        free(x);
+        return NULL;
+    }
+    for (size_t i = 0; i < x->length; i++) {
+        x->number[i] = rand();
+    }
+    // Make sure the number is odd
+    x->number[0] |= 1;
+    return x;
 }

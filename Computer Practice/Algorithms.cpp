@@ -193,3 +193,10 @@ ll cti(const char* ch) {
 
     return result * sign;
 }
+
+bool is_prime(ll num) {
+    if (num <= 2) return num == 2;
+    ull d = 3;
+    while (d * d < num && (num % d)) d += 1;
+    return d * d >= num;
+}
