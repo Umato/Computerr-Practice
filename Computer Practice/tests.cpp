@@ -577,13 +577,13 @@ void big_int_test_loop(ll n) {
 
         big_int_free(num1);
         big_int_free(num2);
-        num1 = big_int_rnd(1024);
-        num2 = big_int_rnd(1024);
+        num1 = big_int_rnd(256);
+        num2 = big_int_rnd(256);
 
         ll creation_end = clock();
         creation_time += (creation_end - creation_start);
 
-        r = big_int_mul_karatsuba(num1, num2);
+        r = big_int_mul(num1, num2);
 
         big_int_free(r);
     }

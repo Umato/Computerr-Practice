@@ -534,15 +534,19 @@ void big_int_div_by_sub(const big_int* n1, const big_int* n2, big_int** quotient
     return;
 }
 
+// Есть какая-то проблема
 big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod) {
-    if (!base || !exponent || !mod) return nullptr;
-
+    if (!base || !exponent || !mod) {
+        return nullptr;
+    }
+    big_int* one = big_int_get("1");
     big_int* zero = big_int_get("0");
     big_int* result = big_int_get("1");
     if (!result) {
         big_int_free(zero);
         return nullptr;
     }
+
     big_int* base_copy = big_int_copy(base);
     if (!base_copy) {
         big_int_free(result);
@@ -552,7 +556,6 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
     big_int* exp_copy = big_int_copy(exponent);
     if (!exp_copy) {
         big_int_free(result);
-        big_int_free(zero);
         big_int_free(base_copy);
         return nullptr;
     }
@@ -562,18 +565,17 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
         big_int_free(result);
         big_int_free(base_copy);
         big_int_free(exp_copy);
-        big_int_free(zero);
         return nullptr;
     }
 
     big_int_free(base_copy);
     base_copy = rem;
-    
+
     while (!big_int_eq(exp_copy, zero)) {
         big_int* tmp = nullptr;
 
-        if (exp_copy->number[0] & 1) {
-            tmp = big_int_mul(result, base_copy);
+        if (!(exp_copy->number[0] & 1)) {
+            tmp = big_int_mul_karatsuba(result, result);
             big_int* tmpmod = big_int_mod(tmp, mod);
             if (!tmpmod) {
                 big_int_free(result);
@@ -585,26 +587,29 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
             big_int_free(result);
             result = tmpmod;
             big_int_free(tmp);
+            big_int_shift_right_void(&exp_copy, 1);
         }
-
-        tmp = big_int_mul(base_copy, base_copy);
-        big_int* tmpmod = big_int_mod(tmp, mod);
-        if (!tmpmod) {
+        else {
+            tmp = big_int_mul_karatsuba(result, base_copy);
+            big_int* tmpmod = big_int_mod(tmp, mod);
+            if (!tmpmod) {
+                big_int_free(result);
+                big_int_free(base_copy);
+                big_int_free(exp_copy);
+                big_int_free(zero);
+                return nullptr;
+            }
             big_int_free(result);
-            big_int_free(base_copy);
-            big_int_free(zero);
-            big_int_free(exp_copy);
-            return nullptr;
+            result = tmpmod;
+            big_int_free(tmp);
+            big_int_sub_void(&exp_copy, one);
         }
-        big_int_free(base_copy);
-        base_copy = tmpmod;
-        big_int_free(tmp);
-
-        big_int_shift_right_void(&exp_copy, 1);
     }
+
     big_int_free(base_copy);
     big_int_free(exp_copy);
     big_int_free(zero);
+    big_int_free(one);
 
     return result;
 }
@@ -758,16 +763,47 @@ void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, b
 
 }
 
-big_int* big_int_mod(const big_int* n1, const big_int* n2) {
-    if (!n1 || !n2) return nullptr;
+big_int* big_int_mod(const big_int* num1, const big_int* num2) {
 
-    big_int* quotient = nullptr;
-    big_int* reminder = nullptr;
-    big_int_div(n1, n2, &quotient, &reminder);
-    big_int_free(quotient);
+    big_int* zero = big_int_get("0");
+    big_int* one = big_int_get("1");
+    if (big_int_eq(num2, zero)) return zero;
 
-    return reminder;
+    big_int* r = big_int_get("0");
+
+    const size_t total_bits = num1->length << 3;
+    big_int* b = big_int_abs(num2);
+
+    for (ll i = total_bits - 1; i >= 0; --i) {
+        big_int_shift_left_void(&r, 1);
+        r->number[0] |= ((num1->number[i >> 3] >> (i & 7)) & 1);
+
+        if (big_int_geq(r, b)) {
+            big_int_sub_void(&r, b);
+        }
+    }
+
+    if (num1->sign && !big_int_eq(r, zero)) {
+        big_int_sub_void(&r, b);
+    }
+    r->sign = false;
+    big_int_free(b);
+    big_int_free(zero);
+    big_int_free(one);
+    big_int_remove_zeroes(r);
+    return r;
 }
+
+//big_int* big_int_mod(const big_int* n1, const big_int* n2) {
+//    if (!n1 || !n2) return nullptr;
+//
+//    big_int* quotient = nullptr;
+//    big_int* reminder = nullptr;
+//    big_int_div(n1, n2, &quotient, &reminder);
+//    big_int_free(quotient);
+//
+//    return reminder;
+//}
 
 big_int* big_int_div_quotient(const big_int* n1, const big_int* n2) {
     if (!n1 || !n2) return NULL;
@@ -849,46 +885,57 @@ big_int* big_int_lr_mod_pow(const char base, const big_int* exponent, const big_
 }
 
 big_int* big_int_lr_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod) {
-    if (!base || !exponent || !mod) return NULL;
+    if (!base || !exponent || !mod) return nullptr;
 
     big_int* result = big_int_mod(base, mod);
-    if (!result) return NULL;
+    if (!result) return nullptr;
 
     big_int* zero = big_int_get("0");
     if (!zero) {
         big_int_free(result);
-        return NULL;
+        return nullptr;
     }
 
     const size_t total_bits = exponent->length << 3;
     bool c = false;
-
+    //cout << "Points1";
     for (int i = total_bits - 1; i >= 0; --i) {
         if (c) {
             big_int_mul_void(&result, result);
+            //cout << clock() / CLOCKS_PER_SEC << "\n";;
+            //cout << "Points4" << result->length << " " << mod->length << "\n";
             big_int* rm = big_int_mod(result, mod);
+            //cout << clock() / CLOCKS_PER_SEC << "\n";;
+            //cout << "Points3";
             if (!rm) {
                 big_int_free(result);
-                return NULL;
+                return nullptr;
             }
+            //cout << clock() / CLOCKS_PER_SEC << "\n";;
+            //cout << "Points2";
             big_int_free(result);
             result = rm;
-
+            //cout << "Points5";
             if ((exponent->number[i >> 3] >> (i & 7)) & 1) {
-                big_int_mul_void(&result, base); // add result base times 
+                big_int_mul_void(&result, base); 
+                //cout << "Points6";
                 rm = big_int_mod(result, mod);
+                //cout << "Points7";
                 if (!rm) {
                     big_int_free(result);
-                    return NULL;
+                    return nullptr;
                 }
+                //cout << "Points8";
                 big_int_free(result);
+                //cout << "Points9";
                 result = rm;
+                //cout << "Points11";
             }
             continue;
         }
         if ((exponent->number[i >> 3] >> (i & 7)) &1) c = true;
     }
-
+    //cout << "Points22";
     return result;
 }
 
@@ -982,10 +1029,12 @@ big_int* big_int_get_dec(const char* x) {
 }
 
 big_int* big_int_slice(const big_int* n, size_t start, size_t end) {
-    if (!n || end < start || end > n->length) return NULL;
+    if (!n || end < start) return nullptr;
+    
+    if (end > n->length) end = n->length;
 
     big_int* result = (big_int*)malloc(sizeof(big_int));
-    if (!result) return NULL;
+    if (!result) return nullptr;
 
     result->length = end - start;
     result->number = (unsigned char*)calloc(result->length, sizeof(unsigned char));
@@ -1023,15 +1072,9 @@ big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
     big_int_add_void(&a, b); // a = a + b
     big_int_add_void(&c, d); // c = c + d
 
-    big_int_free(b); // Больше не нужны
-    big_int_free(d);
-
     big_int* res = big_int_mul_karatsuba(a, c); // res = (a + b) * (c + d)
-    big_int_free(a); // Больше не нужны
-    big_int_free(c);
 
-    big_int_sub_void(&res, ac_bd); // res = (a + b) * (c + d) - ac_bd (ac_bd = ac + bd)
-    big_int_free(ac_bd);
+    big_int_sub_void(&res, ac_bd); //    = (a + b) * (c + d) - ac_bd (ac_bd = ac + bd)
 
     big_int_shift_left_void(&ac, (x << 4)); // ac * x ^ 2
     big_int_shift_left_void(&res, (x << 3)); // res * x
@@ -1039,10 +1082,8 @@ big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2) {
     big_int_add_void(&res, ac); // res = res + ac
     big_int_add_void(&res, bd); // res = res + bd
 
-    big_int_free(ac);
-    big_int_free(bd);
-
-    res->sign = !(big_int_eq(res, big_int_get("0"))) ? n1->sign ^ n2->sign : false;
+    big_int_free(7, ac, bd, ac_bd, a, c, b, d);
+    res->sign = !(big_int_eq(res, big_int_get("0"))) ? (n1->sign != n2->sign) : false;
     return res;
 }
 
@@ -1068,7 +1109,7 @@ big_int* big_int_rnd(size_t bytes_num) {
 big_int* generate_big_int_prime(size_t bytes_num) {
     big_int* ans = big_int_rnd_odd(bytes_num);
     ll start = clock();
-    while (!(miller_rabin_test_big_int(ans, 30))) {
+    while (!(miller_rabin_test_big_int(ans, 10))) {
         ll end = clock();
         big_int_free(ans);
         ans = big_int_rnd_odd(bytes_num);
@@ -1078,106 +1119,10 @@ big_int* generate_big_int_prime(size_t bytes_num) {
     }
     return ans;
 }
- 
-bool miller_rabin_test_big_int(const big_int* num, size_t iterations) {
-    if (!num || iterations <= 0) return false;
-
-    big_int* one = big_int_get("1");
-    if (big_int_eq(one, num)) {
-        big_int_free(one);
-        return false;
-    }
-    
-    big_int* two = big_int_get("10");
-    if (big_int_eq(two, num)) {
-        big_int_free(one);
-        big_int_free(two);
-        return true;
-    }
-
-    big_int* zero = big_int_get("0");
-
-
-    if (!(num->number[0] & 1)) {
-        big_int_free(one);
-        big_int_free(zero);
-        big_int_free(two);
-        return false;
-    }
-
-    big_int* m = big_int_sub(num, one);
-    big_int* m_copy = big_int_copy(m);
-    size_t s = 0;
-
-    while (!(m->number[0] & 1) && !big_int_eq(m, zero)) {
-        big_int_shift_right_void(&m, 1);
-        s++;
-    }
-
-    for (size_t _ = 0; _ < iterations; _++) {
-        //big_int* b = big_int_generate(m);
-        big_int* b = big_int_generate_range(two, m_copy);
-        big_int* x = big_int_mod_pow(b, m, num);
-
-        if (big_int_eq(x, one) || big_int_eq(x, m_copy)) {
-            big_int_free(b);
-            big_int_free(x);
-            continue;
-        }
-
-        bool continue_flag = false;
-        for (size_t i = 0; i < s - 1; i++) {
-            big_int* temp_x = big_int_mod_pow(x, two, num);
-            big_int_free(x);
-
-            x = temp_x;
-
-            if (big_int_eq(x, one)) {
-                big_int_free(b);
-                big_int_free(x);
-                big_int_free(m);
-                big_int_free(m_copy);
-                big_int_free(one);
-                big_int_free(zero);
-                big_int_free(two);
-                return false;
-            }
-
-            if (big_int_eq(x, m_copy)) {
-                continue_flag = true;
-                break;
-            }
-        }
-
-        if (continue_flag) {
-            big_int_free(b);
-            big_int_free(x);
-            continue;
-        }
-
-        big_int_free(b);
-        big_int_free(x);
-        big_int_free(zero);
-        big_int_free(one);
-        big_int_free(two);
-        big_int_free(m_copy);
-        big_int_free(m);
-        return false;
-    }
-
-    big_int_free(m);
-    big_int_free(m_copy);
-    big_int_free(zero);
-    big_int_free(one);
-    big_int_free(two);
-    return true;
-}
 
 big_int* big_int_generate_range(const big_int* n1, const big_int* n2) {
-    //assert(!n1 || !n2);
-    //assert(big_int_geq(n2, n1));
 
-    big_int* difference = big_int_sub(n2, n1); //this function should subtract two big_int's
+    big_int* difference = big_int_sub(n2, n1); 
     size_t num_bytes = difference->length;
 
     big_int* rnd_num = nullptr;
@@ -1187,7 +1132,7 @@ big_int* big_int_generate_range(const big_int* n1, const big_int* n2) {
         rnd_num = big_int_rnd(num_bytes);
     } while (!(big_int_geq(rnd_num, n1) && !big_int_geq(rnd_num, n2)));
 
-    big_int* result = big_int_add(n1, rnd_num); //this function should add two big_int's
+    big_int* result = big_int_add(n1, rnd_num); 
 
     big_int_free(difference);
     big_int_free(rnd_num);
@@ -1236,4 +1181,104 @@ big_int* big_int_rnd_odd(size_t bytes_num) {
     // Make sure the number is odd
     x->number[0] |= 1;
     return x;
+}
+
+bool miller_rabin_test_big_int(const big_int* num, size_t iterations) {
+    if (!num) return false;
+
+    big_int* one = big_int_get(1);
+    big_int* two = big_int_get(2);
+
+    if (big_int_eq(num, two)) return true;
+    if (!(num->number[0] & 1)) return false;
+
+    big_int* num_1 = big_int_sub(num, big_int_get("1"));
+    big_int* d = big_int_copy(num_1);
+
+    size_t s = 0;
+    while (!(d->number[0] & 1)) {
+        big_int_shift_right_void(&d, 1);
+        s++;
+        //cout << "Point1";
+    }
+    big_int* a = big_int_rnd(1 + rand() % (num->length));
+    for (size_t i = 0; i < iterations; big_int_add_void(&a, one), i++) {
+        //big_int* a = big_int_generate_range(two, num_1);
+        cout << "Point1";
+        //big_int* a = big_int_rnd(1 + rand() % (num->length));
+        big_int* x = big_int_lr_mod_pow(a, d, num);
+        cout << "Point2";
+        if (big_int_eq(x, big_int_get("1")) || big_int_eq(x, num_1)) {
+            big_int_free(a);
+            big_int_free(x);
+            continue;
+        }
+        size_t j;
+        for (j = 0; j < s - 1; j++) {
+            //x = big_int_lr_mod_pow(x, two, num);
+            big_int_mul_void(&x, x);
+            big_int* temp_x = big_int_mod(x, num);
+            big_int_free(x);
+            x = temp_x;
+            if (big_int_eq(x, one)) return false;
+            if (big_int_eq(x, num_1)) break;
+        }
+        //big_int_free(a);
+        if (j == s - 1) {
+            big_int_free(x);
+            big_int_free(d);
+            big_int_free(num_1);
+            return false;
+        }
+        big_int_free(x);
+    }
+
+    big_int_free(d);
+    big_int_free(num_1);
+    return true;
+}
+
+void big_int_free(size_t count, ...) {
+    va_list args;
+    va_start(args, count);
+    for (int i = 0; i < count; ++i) {
+        big_int* num = va_arg(args, big_int*);
+        if (num) {
+            num->length = 0;
+            num->sign = false;
+            if (num->number) {
+                free(num->number);
+                num->number = nullptr;
+            }
+            free(num);
+        }
+    }
+
+    va_end(args);
+}
+
+
+big_int* big_int_lr_mod_pow2(big_int* x, big_int* n, big_int* m) {
+    big_int* n3 = big_int_get("1");
+    big_int* sq;
+    big_int* mul;
+    big_int* mul2;
+    for (int i = n->length - 1; i > -1; i--) {
+        for (int j = 7; j > -1; j--) {
+            n3 = big_int_mod(n3, m);
+            sq = big_int_mul_karatsuba(n3, n3);
+            n3 = big_int_mod(sq, m);
+            big_int_free(sq);
+            if ((n->number[i]) & (1 << j)) {
+                mul = big_int_get("0");
+                mul = big_int_mod(x, m);
+                mul2 = big_int_mul_karatsuba(n3, mul);
+                swap(mul2, n3);
+                big_int_free(mul);
+                big_int_free(mul2);
+            }
+        }
+    }
+    n3 = big_int_mod(n3, m);
+    return n3;
 }

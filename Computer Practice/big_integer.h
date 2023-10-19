@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <cstdarg>
 //#include <cmath>
 
 
@@ -207,6 +208,7 @@ void big_int_div(const big_int* num1, const big_int* num2, big_int** quotient, b
 /// <param name="mod">The modulating number.</param>
 /// <returns>The calculated power modulo, or NULL if memory allocation fails.</returns>
 big_int* big_int_lr_mod_pow(const char base, const big_int* exponent, const big_int* mod);
+
 big_int* big_int_lr_mod_pow(const big_int* base, const big_int* exponent, const big_int* mod);
 /// <summary>
 /// Performs the modulo operation on two big integers (n1 and n2), returning the remainder after division of n1 by n2.
@@ -214,7 +216,7 @@ big_int* big_int_lr_mod_pow(const big_int* base, const big_int* exponent, const 
 /// <param name="n1">Pointer to the first big_int object (dividend).</param>
 /// <param name="n2">Pointer to the second big_int object (divisor).</param>
 /// <returns>Remainder of the division of n1 by n2, or NULL if memory allocation fails.</returns>
-big_int* big_int_mod(const big_int* n1, const big_int* n2);
+big_int* big_int_mod(const big_int* num1, const big_int* num2);
 /// <summary>
 /// Performs division of two big integers (n1 and n2) and returns only quotient.
 /// </summary>
@@ -230,8 +232,6 @@ void big_int_print_decimal(const big_int* num);
 big_int* big_int_get_dec(const char* x);
 
 big_int* big_int_mul_karatsuba(const big_int* n1, const big_int* n2);
-
-//big_int* big_int_rnd(size_t bytes_num);
 
 big_int* big_int_slice(const big_int* n, size_t start, size_t end);
 
@@ -249,6 +249,9 @@ big_int* big_int_rnd_odd(size_t bytes_num);
 
 big_int* big_int_generate_range(const big_int* n1, const big_int* n2);
 
+void big_int_free(size_t count, ...);
+
+big_int* big_int_lr_mod_pow2(big_int* x, big_int* n, big_int* m);
 #endif // BIG_INT_H
 
 
