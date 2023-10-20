@@ -237,7 +237,7 @@ big_int* big_int_sub(const big_int* n1, const big_int* n2) {
     return NULL;
 }
 
-big_int* big_int_shift_right(const big_int* num, ll n) {
+big_int* big_int_shift_right(const big_int*  num, ll n) {
     if (!num || n < 0) return NULL;
     
     ll bytes_shift = n / 8;
@@ -614,6 +614,18 @@ big_int* big_int_mod_pow(const big_int* base, const big_int* exponent, const big
     return result;
 }
 
+void big_int_add_void(big_int* n1, const big_int* n2) {
+    if (!n1 || !n2) return;
+
+    big_int* temp = big_int_add(n1, n2);
+    if (!temp) return;
+    free(n1->number);
+    n1->length = temp->length;
+    n1->sign = temp->sign;
+    n1->number = temp->number;
+    free(temp);
+}
+
 void big_int_add_void(big_int** n1, const big_int* n2) {
     if (!n1 || !n2) return;
 
@@ -622,6 +634,18 @@ void big_int_add_void(big_int** n1, const big_int* n2) {
 
     big_int_free(*n1);
     *n1 = temp;
+}
+
+void big_int_sub_void(big_int* n1, const big_int* n2) {
+    if (!n1 || !n2) return;
+
+    big_int* temp = big_int_sub(n1, n2);
+    if (!temp) return;
+    free(n1->number);
+    n1->length = temp->length;
+    n1->sign = temp->sign;
+    n1->number = temp->number;
+    free(temp);
 }
 
 void big_int_sub_void(big_int** n1, const big_int* n2) {
@@ -793,17 +817,6 @@ big_int* big_int_mod(const big_int* num1, const big_int* num2) {
     big_int_remove_zeroes(r);
     return r;
 }
-
-//big_int* big_int_mod(const big_int* n1, const big_int* n2) {
-//    if (!n1 || !n2) return nullptr;
-//
-//    big_int* quotient = nullptr;
-//    big_int* reminder = nullptr;
-//    big_int_div(n1, n2, &quotient, &reminder);
-//    big_int_free(quotient);
-//
-//    return reminder;
-//}
 
 big_int* big_int_div_quotient(const big_int* n1, const big_int* n2) {
     if (!n1 || !n2) return NULL;
@@ -1256,7 +1269,6 @@ void big_int_free(size_t count, ...) {
 
     va_end(args);
 }
-
 
 big_int* big_int_lr_mod_pow2(big_int* x, big_int* n, big_int* m) {
     big_int* n3 = big_int_get("1");

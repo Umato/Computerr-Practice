@@ -237,6 +237,13 @@ big_int* big_int_slice(const big_int* n, size_t start, size_t end);
 
 big_int* generate_big_int_prime(size_t bytes_num);
 
+
+
+void big_int_add_void(big_int* n1, const big_int* n2);
+void big_int_sub_void(big_int* n1, const big_int* n2);
+
+
+
 bool miller_rabin_test_big_int(const big_int* num, size_t iterations);
 
 big_int* big_int_rnd(size_t n);
