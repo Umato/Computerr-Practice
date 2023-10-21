@@ -237,12 +237,15 @@ big_int* big_int_slice(const big_int* n, size_t start, size_t end);
 
 big_int* generate_big_int_prime(size_t bytes_num);
 
-
-
 void big_int_add_void(big_int* n1, const big_int* n2);
+
 void big_int_sub_void(big_int* n1, const big_int* n2);
 
+void big_int_shift_left_void(big_int* num, ll n);
 
+void big_int_shift_right_void(big_int* num, ll n);
+
+void big_int_mul_void(big_int* n1, const big_int* n2);
 
 bool miller_rabin_test_big_int(const big_int* num, size_t iterations);
 
@@ -258,7 +261,6 @@ big_int* big_int_generate_range(const big_int* n1, const big_int* n2);
 
 void big_int_free(size_t count, ...);
 
-big_int* big_int_lr_mod_pow2(big_int* x, big_int* n, big_int* m);
 #endif // BIG_INT_H
 
 
